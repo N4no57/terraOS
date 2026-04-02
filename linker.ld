@@ -7,6 +7,7 @@ SECTIONS
     .text ALIGN(1) :
     {
         *(.text)
+        *(.data)
     } = 0x00
 
     .sig 0x7DFE :
