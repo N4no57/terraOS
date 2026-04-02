@@ -31,5 +31,22 @@ disk_error: db "Disk Error", 0
 
 boot_drive: db 0
 
+buffer_linear equ 0x5000 ; linear address where the kernel will be loaded
+
+buffer_segment equ buffer_linear >> 4 ; segment:offset for the buffer
+buffer_offset equ buffer_linear & 0xF ; offset for the buffer
+
+disk_packet:
+    db 0x10 ; size of packet
+    db 0 ; reserved
+sectors:
+    dw 1 ; number of sectors to read (to be filled in)
+offset:
+    dw buffer_offset ; offset to buffer (to be filled in)
+segment:
+    dw buffer_segment ; segment of buffer (to be filled in)
+sector:
+    dq 0 ; LBA address (to be filled in)
+
 section .magic
 dw 0xAA55
