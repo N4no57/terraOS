@@ -79,7 +79,7 @@ start:
     mov byte [si], 0x4D
     jc disk_error ; if carry flag is set, the disk read is fucked
 
-    jmp 0x1000:0x0000 ; jump to the loaded kernel
+    jmp far [kernel_ptr] ; jump to the loaded kernel
 
 end:
     hlt
@@ -136,6 +136,10 @@ ToCHS:
 section .data
 str: db "Sup Homie", 0
 disk_error_str: db "Disk Error", 0
+
+kernel_ptr:
+    dw 0x0000 ; offset
+    dw 0x1000 ; segment
 
 boot_drive: db 0
 root_dir_start: dw 0
