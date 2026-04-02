@@ -40,13 +40,13 @@ disk_packet:
     db 0x10 ; size of packet
     db 0 ; reserved
 sectors:
-    dw 1 ; number of sectors to read (to be filled in)
+    dw 1 ; TODO: number of sectors to read
 offset:
-    dw buffer_offset ; offset to buffer (to be filled in)
+    dw buffer_offset ; offset to buffer
 segment:
-    dw buffer_segment ; segment of buffer (to be filled in)
+    dw buffer_segment ; segment of buffer
 sector:
-    dq 0 ; LBA address (to be filled in)
+    dq 0 ; LBA address (Calculated at runtime)
 
 section .magic
 dw 0xAA55
