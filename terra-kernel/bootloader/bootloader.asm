@@ -4,7 +4,9 @@ section .text
 .global start
 start:
     xor ax, ax
-    mov si, [str] 
+    mov si, [str]
+    call print
+    hlt
 
 print:
     xor bx, bx
