@@ -1,29 +1,30 @@
-.org 0x7C00
-section .text
+[BITS 16]
 
-.global start
+section .text
+global start
+
 start:
     xor ax, ax
-    mov si, [str]
+    mov si, str
     call print
     hlt
 
 print:
     xor bx, bx
     mov ah, 0x0E
-    
+l0:    
     mov al, [si]
     cmp al, 0
     je l1
 
     int 0x10
     inc si
-    jmp print
+    jmp l0
 
 l1: ret
 
-str:
-    .asciz "Sup Homie"
+section .data
+str: db "Sup Homie", 0
 
-.org 510
-.word 0xAA55
+section .magic
+dw 0xAA55
