@@ -3,12 +3,10 @@ ENTRY(start)
 
 SECTIONS
 {
-    . = 0x7C3C;
-    .text :
+    . = 0x7C3E;
+    .text ALIGN(1) :
     {
         *(.text)
-        *(.rodata*)
-        *(.data*)
     } = 0x00
 
     .sig 0x7DFE :
