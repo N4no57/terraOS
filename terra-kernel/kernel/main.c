@@ -1,3 +1,4 @@
+void kernel_main(void) __attribute__((section(".text")));
 void kernel_main(void) {
     unsigned short *VGA_MEMORY = (unsigned short*)0xB8000;
     const char message[] = "Hello, TerraOS!\0";
