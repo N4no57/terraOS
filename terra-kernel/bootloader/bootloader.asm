@@ -25,6 +25,9 @@ l1: ret
 
 section .data
 str: db "Sup Homie", 0
+disk_error: db "Disk Error", 0
+
+boot_drive: db 0
 
 section .magic
 dw 0xAA55
