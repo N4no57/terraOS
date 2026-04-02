@@ -4,6 +4,8 @@ section .text
 global start
 
 start:
+    mov [boot_drive], dl ; save boot drive for later use
+
     xor ax, ax
     mov si, str
     call print
