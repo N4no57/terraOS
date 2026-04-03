@@ -141,6 +141,7 @@ entry64:
     mov rdi, 0x0F41
     mov rax, 0xB8000
     mov [rax], rdi ; print 'A' so show that yes I am in 64-bit mode
+    jmp 0x10000
 end64:
     hlt
     jmp end64
