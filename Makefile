@@ -1,4 +1,4 @@
-CROSS_GCC := $(HOME)/opt/cross/bin/i686-elf-gcc
+CROSS_GCC := $(HOME)/opt/cross64/bin/x86_64-elf-gcc
 CROSS_AS  := nasm
 
 CFLAGS := -ffreestanding -Wall -nostdlib -Os
@@ -7,13 +7,13 @@ CFLAGS := -ffreestanding -Wall -nostdlib -Os
 
 bootloader:
 	mkdir -vp build/bootloader
-	$(CROSS_AS) -f elf32 terra-kernel/bootloader/bootloader.asm -o build/bootloader/boot.o
-	ld -m elf_i386 -T bootloader.ld build/bootloader/boot.o -o build/boot.bin
+	$(CROSS_AS) -f elf64 terra-kernel/bootloader/bootloader.asm -o build/bootloader/boot.o
+	ld -m elf_x86_64 -T bootloader.ld build/bootloader/boot.o -o build/boot.bin
 
 kernel:
 	mkdir -vp build/kernel
 	$(CROSS_GCC) $(CFLAGS) -c terra-kernel/kernel/main.c -o build/kernel/main.o
-	ld -m elf_i386 -T kernel.ld build/kernel/main.o -o build/kernel.bin
+	ld -m elf_x86_64 -T kernel.ld build/kernel/main.o -o build/kernel.bin
 
 image: bootloader kernel
 	dd if=/dev/zero of=floppy.img bs=512 count=2880
