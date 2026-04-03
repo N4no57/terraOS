@@ -21,8 +21,23 @@ start:
 
     xor ax, ax
     mov ds, ax
+    mov es, ax
     mov ss, ax
     mov sp, 0x9000 ; set up stack
+
+    ; load the extended bootloader from disk into memory at 0x7E00
+    mov ax, 1
+    call ToCHS ; convert LBA 1 to CHS for disk read
+
+    mov ah, 0x2
+    mov al, 1 ; read 1 sector
+    mov ch, [track_var] ; cylinder
+    mov cl, [sector_var] ; sector
+    mov dh, [head_var] ; head
+    mov dl, [boot_drive] ; drive number
+    mov bx, 0x7E00 ; buffer offset in ES:BX
+    int 0x13
+    jc disk_error ; if carry flag is set, the disk read is fucked otherwise we have the extended bootloader in memory at 0x7E00 and we are not fucked
 
     mov ax, 0x1000
     mov es, ax ; set ES to 0x1000 for loading kernel
