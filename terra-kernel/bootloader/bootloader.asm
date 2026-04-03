@@ -65,7 +65,7 @@ start:
     call ToCHS ; convert root directory LBA to CHS for disk read
 
     ; read kernel directory entry from disk
-    mov ah, 0x2 ; extended read specifically in LBA mode
+    mov ah, 0x2
     mov al, 1 ; read 1 sector
     mov ch, [track_var] ; cylinder
     mov cl, [sector_var] ; sector
@@ -82,7 +82,7 @@ start:
     call ToCHS ; convert kernel LBA to CHS for disk read
 
     ; read kernel from disk
-    mov ah, 0x2 ; extended read specifically in LBA mode
+    mov ah, 0x2
     mov al, 1 ; read 1 sector 
     mov ch, [track_var] ; cylinder
     mov cl, [sector_var] ; sector
@@ -119,22 +119,22 @@ l0:
 l1: ret
 
 ; 16-bit includes
-%include "boot_funcs/real_mode/tochs.asm" ; this is required to load in the extended bootloader
+%include "terra-kernel/bootloader/boot_funcs/real_mode/tochs.asm" ; this is required to load in the extended bootloader
 section .extended_bootloader
-%include "boot_funcs/real_mode/elevate.asm"
+%include "terra-kernel/bootloader/boot_funcs/real_mode/elevate.asm"
 
 [BITS 32]
 entry32:
     call init_pt ; set up page tables for long mode
     ; Elevate to 64-bit mode
-    call elevate_to_long_mode
-
+    call switch_long_mode
 end32:
     hlt
     jmp end32
 
 ; 32-bit includes
-%include "boot_funcs/protected_mode/init_pt.asm"
+%include "terra-kernel/bootloader/boot_funcs/protected_mode/init_pt.asm"
+%include "terra-kernel/bootloader/boot_funcs/protected_mode/elevate.asm"
 
 [BITS 64]
 entry64:
