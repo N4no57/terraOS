@@ -1,7 +1,7 @@
 CROSS_GCC := $(HOME)/opt/cross/bin/i686-elf-gcc
 CROSS_AS  := nasm
 
-CFLAGS := -ffreestanding -Wall -nostdlib
+CFLAGS := -ffreestanding -Wall -nostdlib -Os
 
 .PHONY: bootloader kernel image clean
 
@@ -17,7 +17,7 @@ kernel:
 
 image: bootloader kernel
 	dd if=/dev/zero of=floppy.img bs=512 count=2880
-	mkfs.fat -F 12 floppy.img
+	mkfs.fat -F 12 -R 2 floppy.img
 	dd if=build/boot.bin of=floppy.img bs=1 seek=62 conv=notrunc
 	sudo mkdir -p /mnt/floppy
 	sudo mount -o loop -t vfat floppy.img /mnt/floppy
