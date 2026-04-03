@@ -12,8 +12,8 @@ bootloader:
 
 kernel:
 	mkdir -vp build/kernel
-	$(CROSS_GCC) $(CFLAGS) -c terra-kernel/kernel/main.c -o build/kernel/main.o
-	ld -m elf_x86_64 -T kernel.ld build/kernel/main.o -o build/kernel.bin
+	$(CROSS_GCC) $(CFLAGS) -c terra-kernel/kernel/kernel.c -o build/kernel/kernel.o
+	ld -m elf_x86_64 -T kernel.ld build/kernel/kernel.o -o build/kernel.bin
 
 image: bootloader kernel
 	dd if=/dev/zero of=floppy.img bs=512 count=2880
