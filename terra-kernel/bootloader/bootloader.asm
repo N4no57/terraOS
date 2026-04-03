@@ -138,7 +138,7 @@ end32:
 
 [BITS 64]
 entry64:
-    mov rax, 0x10000
+    mov rax, 0xFFFFFFFF80000000 + 0x10000
     jmp rax
 end64:
     hlt
