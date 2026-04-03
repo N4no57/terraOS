@@ -15,6 +15,11 @@ SECTIONS
         *(.magic)
     }
 
+    .extended_bootloader 0x7E00 :
+    {
+        *(.extended_bootloader)
+    }
+
     /DISCARD/ :
     {
         *(.bss*)

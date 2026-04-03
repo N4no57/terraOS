@@ -78,25 +78,7 @@ start:
     jc disk_error ; if carry flag is set, the disk read is fucked
 
     ; switch to 32-bit protected mode
-    cli
-
-    lgdt [gdt_descriptor] ; load GDT
-
-    mov eax, cr0
-    or eax, 1 ; set PE bit
-    mov cr0, eax
-
-    mov ax, 0x10 ; kernel code segment selector
-    mov ds, ax
-    mov es, ax
-    mov fs, ax
-    mov gs, ax
-    mov ss, ax
-
-    mov ebp, 0x9000 ; set up fresh stack because YES
-    mov esp, ebp
-
-    jmp 8:entry32 ; jump to the loaded kernel
+    jmp switch_protected_mode
 
 end:
     hlt
@@ -121,92 +103,23 @@ l0:
 
 l1: ret
 
-; Input:
-;   AX = LBA
-ToCHS:
-    mov bx, [SECTORS_PER_TRACK]
-    shl bx, 1            ; SECTORS_PER_TRACK * 2
-    xor dx, dx           ; DX = 0 for division
-
-    ; Calculate track = LBA / (SECTORS_PER_TRACK*2)
-    div bx               ; AX / BX -> AX=quotient(track), DX=remainder
-    mov si, ax           ; save track in SI
-
-    ; Calculate head = (LBA % (SPT*2)) / SPT
-    mov ax, dx           ; remainder from previous division
-    mov bx, [SECTORS_PER_TRACK]
-    xor dx, dx
-    div bx               ; AX / BX -> AX=quotient(head), DX=remainder
-    mov di, ax           ; head
-
-    ; Calculate sector = (LBA % SECTORS_PER_TRACK) + 1
-    mov ax, dx           ; remainder from head division
-    add ax, 1
-    ; store sector
-    mov [sector_var], ax ; store sector
-
-    ; store head and track
-    mov [head_var], di ; store head
-    mov [track_var], si ; store track
-    ret
+; 16-bit includes
+%include "boot_funcs/real_mode/tochs.asm" ; this is required to load in the extended bootloader
+section .extended_bootloader
+%include "boot_funcs/real_mode/elevate.asm"
 
 [BITS 32]
 entry32:
+    call init_pt ; set up page tables for long mode
     ; Elevate to 64-bit mode
-    mov ecx, 0xC0000080 ; IA32_EFER MSR
-    rdmsr
-    or eax, 1 << 8
-    wrmsr
-    
-    ; enable paging
-    mov eax, cr0
-    or eax, 1 << 31 ; set PG bit
-    mov cr0, eax
-    
-    ; far jump time
-    jmp 0x24:entry64 ; jump to 64-bit kernel code segment
+    call elevate_to_long_mode
+
 end32:
     hlt
     jmp end32
 
-init_pt:
-    pushad
-
-    ; Clear the memory area for PAGE TABLES :)
-    mov edi, 0x1000
-    mov cr3, edi ; store PML4T address in cr3
-    xor eax, eax
-    mov ecx, 4096
-    rep stosd
-
-    ; set edi to PML4T[0]
-    mov edi, cr3
-
-    ; set up the first entry of each table
-    mov dword [edi], 0x2003 ; Set PML4T[0] to address 0x2000 (PDPT) with flags 0x0003
-    add edi, 0x1000 ; move to PDPT[0]
-    mov dword [edi], 0x3003 ; Set PDPT[0] to address 0x3000 (PDT) with flags 0x0003
-    add edi, 0x1000 ; move to PDT[0]
-    mov dword [edi], 0x4003 ; Set PDT[0] to address 0x4000 (PT) with flags 0x0003
-
-    ; fill in the page table
-    add edi, 0x1000         ; move to PT[0]
-    mov ebx, 0x00000003     ; EBX has address 0x0000 with flags 0x0003
-    mov ecx, 512            ; 512 entries to map the first 2MB of memory
-
-    add_page_entry_protected:
-        mov dword [edi], ebx ; set page table entry to current address with flags
-        add ebx, 0x1000     ; next page (4KB)
-        add edi, 8 ; move to next page table entry
-        loop add_page_entry_protected
-
-    ; Set up PAE paging, but don't enable it quite yet
-    mov eax, cr4
-    or eax, 1 << 5 ; set PAE bit
-    mov cr4, eax
-
-    popad
-    ret
+; 32-bit includes
+%include "boot_funcs/protected_mode/init_pt.asm"
 
 [BITS 64]
 entry64:
