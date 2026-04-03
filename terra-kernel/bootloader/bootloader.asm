@@ -79,7 +79,22 @@ start:
     mov byte [si], 0x4D
     jc disk_error ; if carry flag is set, the disk read is fucked
 
-    jmp far [kernel_ptr] ; jump to the loaded kernel
+    ; switch to 32-bit protected mode
+    cli
+
+    lgdt [gdt_descriptor] ; load GDT
+
+    mov eax, cr0
+    or eax, 1 ; set PE bit
+    mov cr0, eax
+
+    mov ax, 0x10 ; kernel code segment selector
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+    jmp 8:entry32 ; jump to the loaded kernel
 
 end:
     hlt
@@ -133,13 +148,17 @@ ToCHS:
     mov [track_var], si ; store track
     ret
 
+[BITS 32]
+entry32:
+    ; jump to THE KERNEL
+    jmp 0x10000
+thing:
+    hlt
+    jmp thing
+
 section .data
 str: db "Sup Homie", 0
 disk_error_str: db "Disk Error", 0
-
-kernel_ptr:
-    dw 0x0000 ; offset
-    dw 0x1000 ; segment
 
 boot_drive: db 0
 root_dir_start: dw 0
@@ -150,6 +169,16 @@ sectors_to_read: dw 0
 head_var: dw 0
 track_var: dw 0
 sector_var: dw 0
+
+gdt:
+    dq 0 ; null descriptor
+    dq 0x00CF9A000000FFFF ; kernel code segment descriptor
+    dq 0x00CF92000000FFFF ; kernel data segment descriptor
+gdt_end:
+
+gdt_descriptor:
+    dw gdt_end - gdt - 1 ; limit
+    dd gdt ; base
 
 section .magic
 dw 0xAA55
