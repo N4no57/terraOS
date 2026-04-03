@@ -32,7 +32,7 @@ start:
     mov bx, 32
     mul bx ; BPB_RootEntCnt × 32
     mov bx, [BYTES_PER_SECTOR]
-    sub bx, 1 ; BytesPerSector - 1
+    dec bx ; BytesPerSector - 1
     add ax, bx ; (BPB_RootEntCnt × 32) + (BytesPerSector - 1)
     xor dx, dx
     div word [BYTES_PER_SECTOR] ; ((BPB_RootEntCnt × 32) + (BytesPerSector - 1)) / BytesPerSector
@@ -75,8 +75,6 @@ start:
     mov dl, [boot_drive] ; drive number
     xor bx, bx ; buffer offset in ES:BX
     int 0x13
-    mov si, disk_error_str
-    mov byte [si], 0x4D
     jc disk_error ; if carry flag is set, the disk read is fucked
 
     ; switch to 32-bit protected mode
@@ -94,6 +92,10 @@ start:
     mov fs, ax
     mov gs, ax
     mov ss, ax
+
+    mov ebp, 0x9000 ; set up fresh stack because YES
+    mov esp, ebp
+
     jmp 8:entry32 ; jump to the loaded kernel
 
 end:
@@ -150,11 +152,70 @@ ToCHS:
 
 [BITS 32]
 entry32:
-    ; jump to THE KERNEL
-    jmp 0x10000
-thing:
+    ; Elevate to 64-bit mode
+    mov ecx, 0xC0000080 ; IA32_EFER MSR
+    rdmsr
+    or eax, 1 << 8
+    wrmsr
+    
+    ; enable paging
+    mov eax, cr0
+    or eax, 1 << 31 ; set PG bit
+    mov cr0, eax
+    
+    ; far jump time
+    jmp 0x24:entry64 ; jump to 64-bit kernel code segment
+end32:
     hlt
-    jmp thing
+    jmp end32
+
+init_pt:
+    pushad
+
+    ; Clear the memory area for PAGE TABLES :)
+    mov edi, 0x1000
+    mov cr3, edi ; store PML4T address in cr3
+    xor eax, eax
+    mov ecx, 4096
+    rep stosd
+
+    ; set edi to PML4T[0]
+    mov edi, cr3
+
+    ; set up the first entry of each table
+    mov dword [edi], 0x2003 ; Set PML4T[0] to address 0x2000 (PDPT) with flags 0x0003
+    add edi, 0x1000 ; move to PDPT[0]
+    mov dword [edi], 0x3003 ; Set PDPT[0] to address 0x3000 (PDT) with flags 0x0003
+    add edi, 0x1000 ; move to PDT[0]
+    mov dword [edi], 0x4003 ; Set PDT[0] to address 0x4000 (PT) with flags 0x0003
+
+    ; fill in the page table
+    add edi, 0x1000         ; move to PT[0]
+    mov ebx, 0x00000003     ; EBX has address 0x0000 with flags 0x0003
+    mov ecx, 512            ; 512 entries to map the first 2MB of memory
+
+    add_page_entry_protected:
+        mov dword [edi], ebx ; set page table entry to current address with flags
+        add ebx, 0x1000     ; next page (4KB)
+        add edi, 8 ; move to next page table entry
+        loop add_page_entry_protected
+
+    ; Set up PAE paging, but don't enable it quite yet
+    mov eax, cr4
+    or eax, 1 << 5 ; set PAE bit
+    mov cr4, eax
+
+    popad
+    ret
+
+[BITS 64]
+entry64:
+    mov rdi, 0x0F41
+    mov rax, 0xB8000
+    mov [rax], rdi ; print 'A' so show that yes I am in 64-bit mode
+end64:
+    hlt
+    jmp end64
 
 section .data
 str: db "Sup Homie", 0
@@ -172,8 +233,9 @@ sector_var: dw 0
 
 gdt:
     dq 0 ; null descriptor
-    dq 0x00CF9A000000FFFF ; kernel code segment descriptor
+    dq 0x00CF9A000000FFFF ; 32-bit kernel code segment descriptor
     dq 0x00CF92000000FFFF ; kernel data segment descriptor
+    dq 0x00AF9A000000FFFF ; 64-bit kernel code segment descriptor
 gdt_end:
 
 gdt_descriptor:
