@@ -11,4 +11,4 @@ switch_long_mode:
     mov cr0, eax
     
     ; far jump time
-    jmp 0x24:entry64 ; jump to 64-bit kernel code segment
+    jmp 0x18:entry64 ; jump to 64-bit kernel code segment
