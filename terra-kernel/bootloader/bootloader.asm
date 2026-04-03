@@ -145,7 +145,6 @@ end64:
     jmp end64
 
 section .data
-str: db "Sup Homie", 0
 disk_error_str: db "Disk Error", 0
 
 boot_drive: db 0
