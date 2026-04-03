@@ -3,7 +3,7 @@ ENTRY(kernel_main)
 
 SECTIONS
 {
-    . = 0x10000;
+    . = 0xFFFFFFFF80010000;
 
     .text :
     {
