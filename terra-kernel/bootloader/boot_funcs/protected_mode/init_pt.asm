@@ -40,6 +40,30 @@ init_pt:
         add edi, 8 ; move to next page table entry
         loop add_page_entry_protected
 
+    ; set up trampoline for kernel jump
+    mov edi, cr3 ; get PML4T[0] address
+    mov dword [edi], 0x5003 ; Set PML4T[0] to address 0x5000 (PDPT2) with flags 0x0003
+    mov dword [edi + 4], 0
+
+    mov edi, 0x5000 ; set to PDPT2[0]
+    mov dword [edi], 0x6003 ; Set PDPT2[0] to address 0x6000 (PDT2) with flags 0x0003
+    mov dword [edi + 4], 0
+
+    mov edi, 0x6000 ; move to PDT2[0]
+    mov dword [edi], 0x8003 ; Set PDT2[0] to address 0x8000 (PT2) with flags 0x0003
+    mov dword [edi + 4], 0
+
+    mov edi, 0x8000 ; move to PT2[0]
+    add edi, 8 * 7 ; move to PT2[7]
+    mov dword [edi], 0x7003 ; Set PT2[7] to address 0x9000 (trampoline) with flags 0x0003
+    mov dword [edi + 4], 0
+
+    ; map VGA framebuffer (0xB8000) at PT[0xB8]
+    mov edi, 0x8000 ; set to PT[0]
+    add edi, 0xB8 * 8 ; move to PT[B8]
+    mov dword [edi], 0xB8003 ; Set PT[511] to address 0xB8000 (VGA framebuffer) with flags 0x0003
+    mov dword [edi + 4], 0
+
     ; Set up PAE paging, but don't enable it quite yet
     mov eax, cr4
     or eax, 1 << 5 ; set PAE bit
