@@ -21,7 +21,8 @@ typedef u64 size_t;
 
 void kernel_main(void) __attribute__((section(".kernel")));
 void panic(const char* message) __attribute__((noreturn));
-void init_paging();
+void sse_init();
+void paging_init();
 void* alloc_page();
 u64 v2p(void* v);
 void* memcpy(void* dest, const void* src, size_t count);
@@ -34,35 +35,9 @@ u64 *pml4 = NULL;
 void kernel_main(void) {
     // init IDT for reasons unbeknownst to man
     idt_init();
-
-    // init SSE
-    u32 edx;
-    __asm__ volatile (
-        "mov $0x1, %%eax\n\t"
-        "cpuid\n\t"
-        : "=d"(edx)
-        :
-        : "rax", "rbx", "rcx"
-    ); // check if SSE is available otherwise PANIK
-    if (!(edx & (1 << 25))) {
-        panic("SSE not supported");
-    }
-
-    __asm__ volatile (
-        "mov %%cr0, %%rax\n\t"
-        "and $0xFFFB, %%ax\n\t" // clear coprocessor emulation CR0.EM
-        "or $0x2, %%ax\n\t"     // set coprocessor monitoring  CR0.MP
-        "mov %%rax, %%cr0\n\t"
-        "mov %%cr4, %%rax\n\t"
-        "or $0x600, %%ax\n\t" // set CR4.OSFXSR and CR4.OSXMMEXCPT at the same time
-        "mov %%rax, %%cr4\n\t"
-        :
-        :
-        : "rax"
-    ); // SSE IS ENABLED
-
+    sse_init();
     alloc_page(); // allocate the first page as this is where the stack lives, bootloader took care of setting it already
-    init_paging();
+    paging_init();
 
     i32 y = 11;
     const char message[] = "TerraOS - 64-bit C Kernel\0";
@@ -88,7 +63,35 @@ void panic(const char* message) {
     }
 }
 
-void init_paging() {
+void sse_init() {
+    // init SSE
+    u32 edx;
+    __asm__ volatile (
+        "mov $0x1, %%eax\n\t"
+        "cpuid\n\t"
+        : "=d"(edx)
+        :
+        : "rax", "rbx", "rcx"
+    ); // check if SSE is available otherwise PANIK
+    if (!(edx & (1 << 25))) {
+        panic("SSE not supported");
+    }
+
+    __asm__ volatile (
+        "mov %%cr0, %%rax\n\t"
+        "and $0xFFFB, %%ax\n\t" // clear coprocessor emulation CR0.EM
+        "or $0x2, %%ax\n\t"     // set coprocessor monitoring  CR0.MP
+        "mov %%rax, %%cr0\n\t"
+        "mov %%cr4, %%rax\n\t"
+        "or $0x600, %%ax\n\t" // set CR4.OSFXSR and CR4.OSXMMEXCPT at the same time
+        "mov %%rax, %%cr4\n\t"
+        :
+        :
+        : "rax"
+    ); // SSE IS ENABLED
+}
+
+void paging_init() {
     pml4 = alloc_page();
     u64 *pdpt = alloc_page();
     u64 *pdt = alloc_page();
