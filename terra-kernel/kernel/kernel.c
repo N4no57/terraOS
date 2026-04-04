@@ -35,10 +35,6 @@ void kernel_main(void) {
     // init IDT for reasons unbeknownst to man
     idt_init();
 
-    __asm__ volatile (
-        "int $0x0"
-    );
-
     // init SSE
     u32 edx;
     __asm__ volatile (
@@ -92,7 +88,6 @@ void panic(const char* message) {
     }
 }
 
-__attribute__((optimize("O0")))
 void init_paging() {
     pml4 = alloc_page();
     u64 *pdpt = alloc_page();
