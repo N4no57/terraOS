@@ -26,11 +26,16 @@ u64 next_free = POOL_START;
 
 void kernel_main(void) {
     // allocate new stack space
-    u64 old_rsp;
-    __asm__ volatile ("movq %%rsp, %0" : "=r"(old_rsp) : :);
+    u64 old_rsp = (u64)__builtin_frame_address(0);
     u64 stack_size = (KERNEL_BASE + 0x9FFF) - old_rsp;
     void *new_stack = alloc_page();
     memcpy(new_stack, (void *)old_rsp, stack_size);
+
+    __asm__ volatile (
+        "mov %0, %%rsp\n\t"   // set new stack pointer
+        :
+        : "r"((u64)new_stack + PAGE_SIZE) // stack grows down, start at end of page
+    );
 
     u16 *VGA_MEMORY = (u16*)0xB8000;
     i32 y = 11;
