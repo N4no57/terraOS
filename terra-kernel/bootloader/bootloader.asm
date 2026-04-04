@@ -83,7 +83,7 @@ start:
 
     ; read kernel from disk
     mov ah, 0x2
-    mov al, 1 ; read 1 sector 
+    mov al, 2 ; read 1 sector 
     mov ch, [track_var] ; cylinder
     mov cl, [sector_var] ; sector
     mov dh, [head_var] ; head
