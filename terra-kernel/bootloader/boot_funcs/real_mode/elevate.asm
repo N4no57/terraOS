@@ -16,7 +16,7 @@ switch_protected_mode:
     mov gs, ax
     mov ss, ax
 
-    mov ebp, 0x9000 ; set up fresh stack because YES
+    mov ebp, 0x90000 ; set up fresh stack because YES
     mov esp, ebp
 
     jmp 8:entry32 ; jump to the loaded kernel
