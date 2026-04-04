@@ -140,6 +140,7 @@ end32:
 entry64:
     mov rsp, 0xFFFFFFFF80000000 + 0x20000 + 0xFFF ; set the stack at the top of the 2MB page we mapped in protected mode
     and rsp, -16
+    sub rsp, 8
     mov rbp, rsp
 
     mov rax, 0xFFFFFFFF80000000 + 0x10000
