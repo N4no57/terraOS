@@ -2,7 +2,7 @@ CROSS_GCC := $(HOME)/opt/cross64/bin/x86_64-elf-gcc
 CROSS_AS  := nasm
 
 INCLUDES := -I terra-kernel/kernel
-CFLAGS := -ffreestanding -Wall -nostdlib -mcmodel=kernel -O0
+CFLAGS := -ffreestanding -Wall -nostdlib -mcmodel=kernel -O3
 
 kernel_c_files := $(shell find terra-kernel/kernel -name '*.c')
 kernel_asm_files := $(shell find terra-kernel/kernel -name '*.asm')
