@@ -138,7 +138,7 @@ end32:
 
 [BITS 64]
 entry64:
-    mov rbp, 0xFFFFFFFF80000000 + 0x90000 ; set the stack at the top of the 2MB page we mapped in protected mode
+    mov rbp, 0xFFFFFFFF80000000 + 0x9FFF ; set the stack at the top of the 2MB page we mapped in protected mode
     mov rsp, rbp
     mov rax, 0xFFFFFFFF80000000 + 0x10000
     jmp rax
@@ -164,6 +164,8 @@ gdt:
     dq 0x00CF9A000000FFFF ; 32-bit kernel code segment descriptor
     dq 0x00CF92000000FFFF ; kernel data segment descriptor
     dq 0x00AF9A000000FFFF ; 64-bit kernel code segment descriptor
+    dq 0x00CFF2000000FFFF ; user data segment descriptor
+    dq 0x00AFFA000000FFFF ; user code segment descriptor
 gdt_end:
 
 gdt_descriptor:
