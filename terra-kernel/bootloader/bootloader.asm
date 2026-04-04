@@ -92,6 +92,8 @@ start:
     int 0x13
     jc disk_error ; if carry flag is set, the disk read is fucked
 
+    ; get the memory map list from the BIOS and store it at 0x21000 and beyond
+
     ; switch to 32-bit protected mode
     jmp switch_protected_mode
 
