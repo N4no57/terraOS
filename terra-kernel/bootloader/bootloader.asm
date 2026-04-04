@@ -83,7 +83,7 @@ start:
 
     ; read kernel from disk
     mov ah, 0x2
-    mov al, 2 ; read 1 sector 
+    mov al, 127 ; read 127 sectors as that is ~ 64KB which is how much the page table will allocate
     mov ch, [track_var] ; cylinder
     mov cl, [sector_var] ; sector
     mov dh, [head_var] ; head
