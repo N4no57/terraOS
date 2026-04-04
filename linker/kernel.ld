@@ -5,6 +5,11 @@ SECTIONS
 {
     . = 0xFFFFFFFF80010000;
 
+	.begin :
+	{
+		*(.kernel)
+	}
+
     .text :
     {
         *(.text)
