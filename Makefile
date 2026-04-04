@@ -1,7 +1,7 @@
 CROSS_GCC := $(HOME)/opt/cross64/bin/x86_64-elf-gcc
 CROSS_AS  := nasm
 
-CFLAGS := -ffreestanding -Wall -nostdlib -Os
+CFLAGS := -ffreestanding -Wall -nostdlib
 
 .PHONY: bootloader kernel image clean
 
@@ -12,7 +12,7 @@ bootloader:
 
 kernel:
 	mkdir -vp build/kernel
-	$(CROSS_GCC) $(CFLAGS) -c terra-kernel/kernel/kernel.c -o build/kernel/kernel.o
+	$(CROSS_GCC) $(CFLAGS) -Os -c terra-kernel/kernel/kernel.c -o build/kernel/kernel.o
 	ld -m elf_x86_64 -T linker/kernel.ld build/kernel/kernel.o -o build/kernel.bin
 
 image: bootloader kernel
@@ -24,6 +24,11 @@ image: bootloader kernel
 	sudo cp build/kernel.bin /mnt/floppy/
 	sudo umount /mnt/floppy
 	sudo rm -rf /mnt/floppy
+
+debug: image
+	mkdir -vp build/debug/kernel
+	$(CROSS_GCC) $(CFLAGS) -O0 -g -c terra-kernel/kernel/kernel.c -o build/debug/kernel/kernel.o
+	ld -m elf_x86_64 -T linker/kernel_debug.ld build/debug/kernel/kernel.o -o build/debug/kernel.elf
 
 clean:
 	rm -rfv build
