@@ -138,6 +138,8 @@ end32:
 
 [BITS 64]
 entry64:
+    mov rbp, 0xFFFFFFFF80000000 + 0x90000 ; set the stack at the top of the 2MB page we mapped in protected mode
+    mov rsp, rbp
     mov rax, 0xFFFFFFFF80000000 + 0x10000
     jmp rax
 end64:
