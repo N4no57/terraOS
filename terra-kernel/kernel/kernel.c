@@ -18,6 +18,7 @@ typedef u64 size_t;
 #define NULL ((void*)0)
 
 void kernel_main(void) __attribute__((section(".kernel")));
+void init_stack();
 void* alloc_page();
 u64 v2p(void* v);
 void* memcpy(void* dest, const void* src, size_t count);
@@ -25,17 +26,7 @@ void* memcpy(void* dest, const void* src, size_t count);
 u64 next_free = POOL_START;
 
 void kernel_main(void) {
-    // allocate new stack space
-    u64 old_rsp = (u64)__builtin_frame_address(0);
-    u64 stack_size = (KERNEL_BASE + 0x9FFF) - old_rsp;
-    void *new_stack = alloc_page();
-    memcpy(new_stack, (void *)old_rsp, stack_size);
-
-    __asm__ volatile (
-        "mov %0, %%rsp\n\t"   // set new stack pointer
-        :
-        : "r"((u64)new_stack + PAGE_SIZE) // stack grows down, start at end of page
-    );
+    init_stack();
 
     u16 *VGA_MEMORY = (u16*)0xB8000;
     i32 y = 11;
@@ -52,6 +43,27 @@ void kernel_main(void) {
     while (1) {
         __asm__ volatile ("hlt");
     }
+}
+
+void init_stack() {
+    u64 old_rsp;
+
+    __asm__ volatile (
+        "mov %%rsp, %0\n\t"  // load current stack pointer into old_rsp
+        : "=r"(old_rsp)
+    );
+
+    u64 stack_size = (KERNEL_BASE + 0x9FFF) - old_rsp;
+    void *new_stack = alloc_page();
+    u64 new_stack_top = (u64)new_stack + PAGE_SIZE;
+    u64 new_rsp = new_stack_top - stack_size;
+    memcpy((void *)new_rsp, (void *)old_rsp, stack_size);
+
+    __asm__ volatile (
+        "mov %0, %%rsp\n\t"   // set new stack pointer
+        :
+        : "r"((u64)(new_rsp)) // stack grows down, start at end of page
+    );
 }
 
 void* alloc_page() {
