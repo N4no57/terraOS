@@ -56,6 +56,7 @@ void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
     }
 
     paging_init();
+    pmm_init(mmap, mmap_count);
 
     i32 y = 11;
     const char message[] = "TerraOS - 64-bit C Kernel\0";
