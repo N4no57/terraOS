@@ -19,7 +19,14 @@ typedef u64 size_t;
 
 #define NULL ((void*)0)
 
-void kernel_main(void) __attribute__((section(".kernel")));
+typedef struct {
+    uint64_t base_addr;
+    uint64_t length;
+    uint32_t type;
+    uint32_t acpi_ext; // optional (if ECX >= 24)
+} bios_mmap_entry;
+
+void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) __attribute__((section(".kernel")));
 void panic(const char* message) __attribute__((noreturn));
 void sse_init();
 void paging_init();
@@ -32,7 +39,7 @@ u16 *VGA_MEMORY = (u16*)(KERNEL_BASE + 0xB8000);
 u64 next_free = POOL_START;
 u64 *pml4 = NULL;
 
-void kernel_main(void) {
+void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
     // init IDT for reasons unbeknownst to man
     idt_init();
     sse_init();
