@@ -29,10 +29,12 @@ typedef struct {
     u32 acpi_ext; // optional (if ECX >= 24)
 } bios_mmap_entry;
 
+void* alloc_page();
 void* memcpy(void* dest, const void* src, size_t count);
 void *memset(void* dest, int c, size_t count);
 
-extern u8 *mem_bitmap = NULL;
-extern u64 mem_bitmap_size = 0; // in bytes
+extern u64 next_free;
+extern u8 *mem_bitmap;
+extern u64 mem_bitmap_size; // in bytes
 
 #endif

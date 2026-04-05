@@ -6,7 +6,6 @@ void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) __attribute__((section("
 void panic(const char* message) __attribute__((noreturn));
 void sse_init();
 void paging_init();
-void* alloc_page();
 u64 v2p(void* v);
 
 u16 *VGA_MEMORY = (u16*)(KERNEL_BASE + 0xB8000);
@@ -113,16 +112,6 @@ void paging_init() {
         : "r"(pml4_phys)
         : "memory"
     );
-}
-
-void* alloc_page() {
-    if (next_free + PAGE_SIZE >= POOL_END) {
-        // panic: out of memory in bootstrap pool
-        return NULL;
-    }
-    void* vaddr = (void*)next_free;
-    next_free += PAGE_SIZE;
-    return vaddr;
 }
 
 u64 v2p(void* v) {
