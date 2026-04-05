@@ -1,25 +1,25 @@
 #ifndef IDT_H
 #define IDT_H
 
-#include <stdint.h>
+#include "utils.h"
 
 // IDT entry for 64-bit mode
 struct idt_entry {
-    uint16_t offset_low;
-    uint16_t selector;
-    uint8_t ist;          // Interrupt Stack Table offset
-    uint8_t type_attr;    // Type and attributes
-    uint16_t offset_mid;
-    uint32_t offset_high;
-    uint32_t zero;
+    u16 offset_low;
+    u16 selector;
+    u8 ist;          // Interrupt Stack Table offset
+    u8 type_attr;    // Type and attributes
+    u16 offset_mid;
+    u32 offset_high;
+    u32 zero;
 } __attribute__((packed));
 
 struct idt_ptr {
-    uint16_t limit;
-    uint64_t base;
+    u16 limit;
+    u64 base;
 } __attribute__((packed));
 
 void idt_init(void);
-void idt_set_gate(int n, uint64_t handler);
+void idt_set_gate(int n, u64 handler);
 
 #endif

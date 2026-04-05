@@ -12,7 +12,7 @@ static void print_at(const char *str, int x, int y, unsigned char color) {
     }
 }
 
-static void print_hex(uint64_t n, int x, int y) {
+static void print_hex(u64 n, int x, int y) {
     char hex[] = "0x0000000000000000";
     char *digits = "0123456789ABCDEF";
     for (int i = 17; i >= 2; i--) {
@@ -50,7 +50,7 @@ static const char *exception_names[] = {
     "Reserved", "Reserved"
 };
 
-void isr_handler(uint64_t int_no) {
+void isr_handler(u64 int_no) {
     print_at("EXCEPTION: ", 0, 10, 0x0C);
     if (int_no < 32) {
         print_at(exception_names[int_no], 11, 10, 0x0C);
@@ -64,16 +64,16 @@ void isr_handler(uint64_t int_no) {
     }
 }
 
-void irq_handler(uint64_t int_no) {
+void irq_handler(u64 int_no) {
     if (int_no == 33) {
         // Keyboard interrupt - read scancode and pass to keyboard driver
-        uint8_t scancode;
-        __asm__ volatile ("inb %1, %0" : "=a"(scancode) : "Nd"((uint16_t)0x60));
+        u8 scancode;
+        __asm__ volatile ("inb %1, %0" : "=a"(scancode) : "Nd"((u16)0x60));
     }
 
     // Send End of Interrupt (EOI) to PIC
     if (int_no >= 40) {
-        __asm__ volatile ("outb %0, %1" : : "a"((uint8_t)0x20), "Nd"((uint16_t)0xA0));
+        __asm__ volatile ("outb %0, %1" : : "a"((u8)0x20), "Nd"((u16)0xA0));
     }
-    __asm__ volatile ("outb %0, %1" : : "a"((uint8_t)0x20), "Nd"((uint16_t)0x20));
+    __asm__ volatile ("outb %0, %1" : : "a"((u8)0x20), "Nd"((u16)0x20));
 }
