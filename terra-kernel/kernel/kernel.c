@@ -28,6 +28,7 @@ typedef struct {
 
 void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) __attribute__((section(".kernel")));
 void panic(const char* message) __attribute__((noreturn));
+void pmm_init(bios_mmap_entry *mmap, u64 mmap_count);
 void sse_init();
 void paging_init();
 void* alloc_page();
@@ -38,6 +39,8 @@ void *memset(void* dest, int c, size_t count);
 u16 *VGA_MEMORY = (u16*)(KERNEL_BASE + 0xB8000);
 u64 next_free = POOL_START;
 u64 *pml4 = NULL;
+u8 *mem_bitmap = NULL;
+u64 mem_bitmap_size = 0; // in bytes
 
 void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
     // init IDT for reasons unbeknownst to man
