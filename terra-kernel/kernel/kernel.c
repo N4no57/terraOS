@@ -43,7 +43,15 @@ void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
     // init IDT for reasons unbeknownst to man
     idt_init();
     sse_init();
+
     alloc_page(); // allocate the first page as this is where the stack lives, bootloader took care of setting it already
+
+    u64 mmap_size = sizeof(bios_mmap_entry) * mmap_count;
+    u64 page_count = (mmap_size + 4096 - 1) / 4096;
+    for (u64 i = 0; i < page_count; i++) { // allocate memory for the mmap entries
+        alloc_page();
+    }
+
     paging_init();
 
     i32 y = 11;
