@@ -93,6 +93,29 @@ start:
     jc disk_error ; if carry flag is set, the disk read is fucked
 
     ; get the memory map list from the BIOS and store it at 0x21000 and beyond
+    mov ax, 0x2100
+    mov es, ax
+    xor di, di ; set destination to 0x21000
+
+    xor bx, bx
+
+mmap_loop:
+    mov eax, 0xE820
+    mov edx, 0x534D4150
+    mov ecx, 24
+    int 0x15
+
+    jc mmap_end
+    cmp eax, 0x534D4150
+    jne mmap_end
+
+    add di, 24 ; move forwards by 24 bytes
+
+    inc word [mmap_entry_count]
+
+    test ebx, ebx
+    jne mmap_loop
+mmap_end:
 
     ; switch to 32-bit protected mode
     jmp switch_protected_mode
@@ -145,6 +168,9 @@ entry64:
     sub rsp, 8
     mov rbp, rsp
 
+    mov rdi, 0xFFFFFFFF80000000 + 0x21000
+    mov rsi, [mmap_entry_count]
+
     mov rax, 0xFFFFFFFF80000000 + 0x10000
     jmp rax
 end64:
@@ -163,6 +189,8 @@ sectors_to_read: dw 0
 head_var: dw 0
 track_var: dw 0
 sector_var: dw 0
+
+mmap_entry_count: dq 0
 
 gdt:
     dq 0 ; null descriptor
