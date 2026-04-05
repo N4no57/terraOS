@@ -32,4 +32,7 @@ typedef struct {
 void* memcpy(void* dest, const void* src, size_t count);
 void *memset(void* dest, int c, size_t count);
 
+extern u8 *mem_bitmap = NULL;
+extern u64 mem_bitmap_size = 0; // in bytes
+
 #endif
