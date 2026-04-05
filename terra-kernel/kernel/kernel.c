@@ -1,30 +1,5 @@
+#include "headers/utils.h"
 #include "headers/idt.h"
-
-typedef unsigned char u8;
-typedef unsigned short u16;
-typedef unsigned int u32;
-typedef unsigned long long u64;
-
-typedef signed char i8;
-typedef signed short i16;
-typedef signed int i32;
-typedef signed long long i64;
-
-typedef u64 size_t;
-
-#define KERNEL_BASE 0xFFFFFFFF80000000
-#define POOL_START  0xFFFFFFFF80020000
-#define POOL_END    0xFFFFFFFF80200000
-#define PAGE_SIZE   0x1000
-
-#define NULL ((void*)0)
-
-typedef struct {
-    uint64_t base_addr;
-    uint64_t length;
-    uint32_t type;
-    uint32_t acpi_ext; // optional (if ECX >= 24)
-} bios_mmap_entry;
 
 void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) __attribute__((section(".kernel")));
 void panic(const char* message) __attribute__((noreturn));
@@ -33,8 +8,6 @@ void sse_init();
 void paging_init();
 void* alloc_page();
 u64 v2p(void* v);
-void* memcpy(void* dest, const void* src, size_t count);
-void *memset(void* dest, int c, size_t count);
 
 u16 *VGA_MEMORY = (u16*)(KERNEL_BASE + 0xB8000);
 u64 next_free = POOL_START;
