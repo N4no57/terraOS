@@ -15,6 +15,7 @@ void pmm_init(bios_mmap_entry *mmap, u64 mmap_count) {
 
     u64 num_pages = (last_usable_end + PAGE_SIZE - 1) / PAGE_SIZE;
     mem_bitmap_size = (num_pages + 7) / 8;
+    mem_bitmap_bit_size = num_pages;
     u64 page_count = (mem_bitmap_size + PAGE_SIZE - 1) / PAGE_SIZE; // the time has come to allocate the bitmap
 
     mem_bitmap = alloc_page();
@@ -43,4 +44,30 @@ void pmm_init(bios_mmap_entry *mmap, u64 mmap_count) {
         u8 bit_offset = i % 8;
         mem_bitmap[array_index] |= (1 << bit_offset);
     }
+}
+
+/**
+ * @return a pointer to the start of a page aligned 4KiB block of memory
+ */
+void* pmm_alloc() {
+    for (u64 i = 0; i < mem_bitmap_bit_size; i++) {
+        u64 array_index = i / 8;
+        u8 bit_offset = i % 8;
+        if ((mem_bitmap[array_index] & (1 << bit_offset)) == 0) { // free
+            mem_bitmap[array_index] |= (1 << bit_offset); // mark used
+            return (void*)(i * PAGE_SIZE); // return physical address
+        }
+    }
+    return NULL; // out of memory
+}
+
+/**
+ * @param block A pointer to an allocated 4KiB memory block
+ */
+void pmm_free(void* block) {
+    u64 page_index = (u64)block / PAGE_SIZE;
+    if (page_index >= mem_bitmap_bit_size) return; // safety check
+    u64 array_index = page_index / 8;
+    u8 bit_offset = page_index % 8;
+    mem_bitmap[array_index] &= ~(1 << bit_offset); // mark free
 }

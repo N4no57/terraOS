@@ -13,6 +13,7 @@ u64 next_free = POOL_START;
 u64 *pml4 = NULL;
 u8 *mem_bitmap = NULL;
 u64 mem_bitmap_size = 0; // in bytes
+u64 mem_bitmap_bit_size = 0;
 
 void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
     // init IDT for reasons unbeknownst to man

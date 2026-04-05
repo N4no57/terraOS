@@ -36,5 +36,6 @@ void *memset(void* dest, int c, size_t count);
 extern u64 next_free;
 extern u8 *mem_bitmap;
 extern u64 mem_bitmap_size; // in bytes
+extern u64 mem_bitmap_bit_size;
 
 #endif
