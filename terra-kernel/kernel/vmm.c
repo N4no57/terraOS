@@ -95,24 +95,24 @@ void unmap_page(page_table_t ctx, u64 virtual_address) {
     u64 pt_index = (virtual_address >> 12) & 0x1FF;
 
     void *pdpt_phys = (void *)(ctx.pml4t[pml4t_index] & PAGE_MASK);
-    u64 *pdpt = TEMP_PAGE;
+    u64 *pdpt = (u64 *)TEMP_PAGE;
     temp_map((u64)pdpt_phys);
     
     void *pd_phys = (void *)(pdpt[pdpt_index] & PAGE_MASK);
-    u64 *pd = TEMP_PAGE;
+    u64 *pd = (u64 *)TEMP_PAGE;
     temp_map((u64)pd_phys);
 
     void *pt_phys = (void *)(pd[pd_index] & PAGE_MASK);
-    u64 *pt = TEMP_PAGE;
+    u64 *pt = (u64 *)TEMP_PAGE;
     temp_map((u64)pt_phys);
 
-    void *pte = pt[pt_index] & PAGE_MASK;
+    void *pte = (void *)(pt[pt_index] & PAGE_MASK);
 
     pt[pt_index] = 0;
 
     pmm_free(pte);
 
-    temp_map(pt_phys);
+    temp_map((u64)pt_phys);
     bool empty = true;
     for (u16 i = 0; i < 512; i++) {
         if (pt[i] & 0x1) {
@@ -125,7 +125,7 @@ void unmap_page(page_table_t ctx, u64 virtual_address) {
         pmm_free(pt_phys);
     }
 
-    temp_map(pd_phys);
+    temp_map((u64)pd_phys);
     empty = true;
     for (u16 i = 0; i < 512; i++) {
         if (pd[i] & 0x1) {
@@ -138,7 +138,7 @@ void unmap_page(page_table_t ctx, u64 virtual_address) {
         pmm_free(pd_phys);
     }
 
-    temp_map(pdpt_phys);
+    temp_map((u64)pdpt_phys);
     empty = true;
     for (u16 i = 0; i < 512; i++) {
         if (pdpt[i] & 0x1) {
@@ -164,15 +164,15 @@ u64 get_physical_address(page_table_t ctx, u64 virtual_address) {
     u64 pt_index = (virtual_address >> 12) & 0x1FF;
 
     void *pdpt_phys = (void *)(ctx.pml4t[pml4t_index] & PAGE_MASK);
-    u64 *pdpt = TEMP_PAGE;
+    u64 *pdpt = (u64 *)TEMP_PAGE;
     temp_map((u64)pdpt_phys);
     
     void *pd_phys = (void *)(pdpt[pdpt_index] & PAGE_MASK);
-    u64 *pd = TEMP_PAGE;
+    u64 *pd = (u64 *)TEMP_PAGE;
     temp_map((u64)pd_phys);
 
     void *pt_phys = (void *)(pd[pd_index] & PAGE_MASK);
-    u64 *pt = TEMP_PAGE;
+    u64 *pt = (u64 *)TEMP_PAGE;
     temp_map((u64)pt_phys);
 
     return (pt[pt_index] & PAGE_MASK) + (virtual_address & 0xFFF);
