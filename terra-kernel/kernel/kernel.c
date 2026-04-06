@@ -1,19 +1,20 @@
 #include "headers/utils.h"
 #include "headers/pmm.h"
+#include "headers/vmm.h"
 #include "headers/idt.h"
 
 void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) __attribute__((section(".kernel")));
-void panic(const char* message) __attribute__((noreturn));
 void sse_init();
 void paging_init();
 u64 v2p(void* v);
 
 u16 *VGA_MEMORY = (u16*)(KERNEL_BASE + 0xB8000);
+
 u64 next_free = POOL_START;
-u64 *pml4 = NULL;
+u64 *pml4t = NULL;
 u8 *mem_bitmap = NULL;
 u64 mem_bitmap_size = 0; // in bytes
-u64 mem_bitmap_bit_size = 0;
+u64 mem_bitmap_bit_size = 0; // in bits
 
 void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
     // init IDT for reasons unbeknownst to man
@@ -31,6 +32,13 @@ void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
     paging_init();
     pmm_init(mmap, mmap_count);
 
+    void *test = pmm_alloc();
+    map_page((page_table_t){pml4t, true}, 0xFF000, (u64)test, 0x3);
+    u8 *buh = (u8 *)0xFF000;
+    *buh = 1;
+    unmap_page((page_table_t){pml4t, true}, 0xFF000);
+    pmm_free(test);
+
     i32 y = 11;
     const char message[] = "TerraOS - 64-bit C Kernel\0";
 
@@ -40,16 +48,6 @@ void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
 
     memset((void*)(KERNEL_BASE + 0xB8000), 0, 80 * 25 * 2); // clear screen
 
-    while (1) {
-        __asm__ volatile ("hlt");
-    }
-}
-
-void panic(const char* message) {
-    i32 y = 12;
-    for (i32 i = 0; message[i] != '\0'; i++) {
-        VGA_MEMORY[i + y * 80] = 0x0F00 | message[i]; // white text on black background
-    }
     while (1) {
         __asm__ volatile ("hlt");
     }
@@ -84,22 +82,22 @@ void sse_init() {
 }
 
 void paging_init() {
-    pml4 = alloc_page();
+    pml4t = alloc_page();
     u64 *pdpt = alloc_page();
     u64 *pdt = alloc_page();
     u64 *pt = alloc_page();
 
-    memset(pml4, 0, PAGE_SIZE);
+    memset(pml4t, 0, PAGE_SIZE);
     memset(pdpt, 0, PAGE_SIZE);
     memset(pdt, 0, PAGE_SIZE);
     memset(pt, 0, PAGE_SIZE);
 
-    u64 pml4_phys = v2p(pml4);
+    u64 pml4_phys = v2p(pml4t);
     u64 pdpt_phys = v2p(pdpt);
     u64 pdt_phys = v2p(pdt);
     u64 pt_phys = v2p(pt);
 
-    pml4[511] = pdpt_phys | 0x03; // present + writable
+    pml4t[511] = pdpt_phys | 0x03; // present + writable
     pdpt[510] = pdt_phys | 0x03;     // present + writable
     pdt[0] = pt_phys | 0x03;       // present + writable
 
@@ -108,7 +106,7 @@ void paging_init() {
     }
 
     __asm__ volatile (
-        "mov %0, %%cr3\n\t" // load PML4 physical address into CR3
+        "mov %0, %%cr3\n\t" // load PML4T physical address into CR3
         :
         : "r"(pml4_phys)
         : "memory"

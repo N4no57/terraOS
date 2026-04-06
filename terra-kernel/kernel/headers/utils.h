@@ -17,7 +17,7 @@ typedef u64 size_t;
 
 #define KERNEL_BASE 0xFFFFFFFF80000000
 #define POOL_START  0xFFFFFFFF80020000
-#define POOL_END    0xFFFFFFFF80200000
+#define POOL_END    0xFFFFFFFF801FF000
 #define PAGE_SIZE   0x1000
 
 #define NULL ((void*)0)
@@ -32,10 +32,15 @@ typedef struct {
 void* alloc_page();
 void* memcpy(void* dest, const void* src, size_t count);
 void *memset(void* dest, int c, size_t count);
+void panic(const char* message) __attribute__((noreturn));
+
+extern u16 *VGA_MEMORY;
 
 extern u64 next_free;
+extern u64 *pml4t; // kernel page table
 extern u8 *mem_bitmap;
 extern u64 mem_bitmap_size; // in bytes
 extern u64 mem_bitmap_bit_size;
+extern u64 temp_page; // place where temporary page mappings go
 
 #endif

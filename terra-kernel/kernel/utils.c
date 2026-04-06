@@ -27,3 +27,13 @@ void *memset(void* dest, int c, size_t count) {
     }
     return dest;
 }
+
+void panic(const char* message) {
+    i32 y = 12;
+    for (i32 i = 0; message[i] != '\0'; i++) {
+        VGA_MEMORY[i + y * 80] = 0x0F00 | message[i]; // white text on black background
+    }
+    while (1) {
+        __asm__ volatile ("hlt");
+    }
+}
