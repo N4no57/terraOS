@@ -39,7 +39,7 @@ void pmm_init(bios_mmap_entry *mmap, u64 mmap_count) {
     }
 
     // tell the pmm that the space allocated by the page table to the kernel is in fact not usable
-    for (u64 i = 0; i < (POOL_END - KERNEL_BASE + PAGE_SIZE - 1) / PAGE_SIZE; i++) {
+    for (u64 i = 0; i < (KERNEL_END - KERNEL_BASE + PAGE_SIZE - 1) / PAGE_SIZE; i++) {
         u64 array_index = i / 8;
         u8 bit_offset = i % 8;
         mem_bitmap[array_index] |= (1 << bit_offset);

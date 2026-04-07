@@ -25,10 +25,10 @@ void temp_map(u64 physical_address) {
 }
 
 /**
- * @param ctx
- * @param virtual_address
- * @param physical_address
- * @param flags
+ * @param ctx a pointer to the page table to be modified with some metadata
+ * @param virtual_address address to which you want to map a physical address to
+ * @param physical_address actual memory address
+ * @param flags some bits to tell the MMU what it should think of this page table entry
  */
 void map_page(page_table_t ctx, u64 virtual_address, u64 physical_address, u64 flags) {
     u64 pml4t_index = (virtual_address >> 39) & 0x1FF;
