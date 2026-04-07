@@ -34,6 +34,9 @@ void* memcpy(void* dest, const void* src, size_t count);
 void *memset(void* dest, int c, size_t count);
 void panic(const char* message) __attribute__((noreturn));
 
+u64 read_msr(u32 msr);
+void write_msr(u32 msr, u64 val);
+
 extern u16 *VGA_MEMORY;
 
 extern u64 next_free;

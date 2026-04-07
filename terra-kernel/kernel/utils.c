@@ -37,3 +37,26 @@ void panic(const char* message) {
         __asm__ volatile ("hlt");
     }
 }
+
+u64 read_msr(u32 msr) {
+    u32 low, high;
+
+    __asm__ volatile (
+        "rdmsr"
+        : "=a"(low), "=d"(high)
+        : "c"(msr)
+    );
+
+    return ((u64)high << 32) | low;
+}
+
+void write_msr(u32 msr, u64 val) {
+    u32 low = (u32)(val & 0xFFFFFFFF);
+    u32 high = (u32)(val >> 32);
+
+    __asm__ volatile (
+        "wrmsr"
+        :
+        : "c"(msr), "a"(low), "d"(high)
+    );
+}
