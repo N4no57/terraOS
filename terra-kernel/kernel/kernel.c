@@ -1,6 +1,7 @@
 #include "headers/utils.h"
 #include "headers/pmm.h"
 #include "headers/vmm.h"
+#include "headers/kheap.h"
 #include "headers/idt.h"
 
 void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) __attribute__((section(".kernel")));
@@ -15,6 +16,8 @@ u64 *pml4t = NULL;
 u8 *mem_bitmap = NULL;
 u64 mem_bitmap_size = 0; // in bytes
 u64 mem_bitmap_bit_size = 0; // in bits
+void *heap_start = 0;
+void *heap_end = 0;
 
 void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
     // init IDT for reasons unbeknownst to man
@@ -32,19 +35,11 @@ void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
     paging_init();
     pmm_init(mmap, mmap_count);
 
-    void *test = pmm_alloc();
-    map_page((page_table_t){pml4t, true}, 0xFF000, (u64)test, 0x3);
-    u8 *buh = (u8 *)0xFF000;
-    *buh = 1;
-    unmap_page((page_table_t){pml4t, true}, 0xFF000);
-    pmm_free(test);
-
-    i32 y = 11;
-    const char message[] = "TerraOS - 64-bit C Kernel\0";
-
-    for (i32 i = 0; message[i] != '\0'; i++) {
-        VGA_MEMORY[i + y * 80] = 0x0F00 | message[i]; // white text on black background
+    heap_start = alloc_page();
+    for (u8 i = 0; i < 3; i++) {
+        heap_end = alloc_page() + PAGE_SIZE;
     }
+    heap_init();
 
     memset((void*)(KERNEL_BASE + 0xB8000), 0, 80 * 25 * 2); // clear screen
 
