@@ -25,15 +25,11 @@ start:
     mov ss, ax
     mov sp, 0x9000 ; set up stack
 
-    ; load the extended bootloader from disk into memory at 0x7E00
-    mov ax, 1
-    call ToCHS ; convert LBA 1 to CHS for disk read
-
     mov ah, 0x2
     mov al, 1 ; read 1 sector
-    mov ch, [track_var] ; cylinder
-    mov cl, [sector_var] ; sector
-    mov dh, [head_var] ; head
+    mov ch, 0 ; cylinder
+    mov cl, 2 ; sector
+    mov dh, 0; head
     mov dl, [boot_drive] ; drive number
     mov bx, 0x7E00 ; buffer offset in ES:BX
     int 0x13
@@ -92,30 +88,7 @@ start:
     int 0x13
     jc disk_error ; if carry flag is set, the disk read is fucked
 
-    ; get the memory map list from the BIOS and store it at 0x21000 and beyond
-    mov ax, 0x2100
-    mov es, ax
-    xor di, di ; set destination to 0x21000
-
-    xor bx, bx
-
-mmap_loop:
-    mov eax, 0xE820
-    mov edx, 0x534D4150
-    mov ecx, 24
-    int 0x15
-
-    jc mmap_end
-    cmp eax, 0x534D4150
-    jne mmap_end
-
-    add di, 24 ; move forwards by 24 bytes
-
-    inc word [mmap_entry_count]
-
-    test ebx, ebx
-    jne mmap_loop
-mmap_end:
+    call get_mmap
 
     ; switch to 32-bit protected mode
     jmp switch_protected_mode
@@ -143,9 +116,10 @@ l0:
 
 l1: ret
 
+section .extended_bootloader
 ; 16-bit includes
 %include "terra-kernel/bootloader/boot_funcs/real_mode/tochs.asm" ; this is required to load in the extended bootloader
-section .extended_bootloader
+%include "terra-kernel/bootloader/boot_funcs/real_mode/get_mmap.asm"
 %include "terra-kernel/bootloader/boot_funcs/real_mode/elevate.asm"
 
 [BITS 32]
@@ -193,17 +167,49 @@ sector_var: dw 0
 mmap_entry_count: dq 0
 
 gdt:
-    dq 0 ; null descriptor
-    dq 0x00CF9A000000FFFF ; 32-bit kernel code segment descriptor
-    dq 0x00CF92000000FFFF ; kernel data segment descriptor
-    dq 0x00AF9A000000FFFF ; 64-bit kernel code segment descriptor
-    dq 0x00CFF2000000FFFF ; user data segment descriptor
-    dq 0x00AFFA000000FFFF ; user code segment descriptor
+    dq 0                    ; null descriptor
+    dq 0x00CF9A000000FFFF   ; 32-bit kernel code segment descriptor
+    dq 0x00CF92000000FFFF   ; kernel data segment descriptor
+    dq 0x00AF9A000000FFFF   ; 64-bit kernel code segment descriptor
+    dq 0x00CFF2000000FFFF   ; user data segment descriptor
+    dq 0x00AFFA000000FFFF   ; user code segment descriptor
+    ; TSS descriptor
+    dq 0
+    dq 0
 gdt_end:
 
 gdt_descriptor:
     dw gdt_end - gdt - 1 ; limit
-    dd gdt ; base
+    dq gdt ; base
+
+tss:
+    dd 0 ; Reserved
+    dd 0 ; RSP0 (low)
+    dd 0 ; RSP0 (high)
+    dd 0 ; RSP1 (low)
+    dd 0 ; RSP1 (high)
+    dd 0 ; RSP2 (low)
+    dd 0 ; RSP2 (high)
+    dd 0 ; Reserved
+    dd 0 ; Reserved
+    dd 0 ; IST1 (low)
+    dd 0 ; IST1 (high)
+    dd 0 ; IST2 (low)
+    dd 0 ; IST2 (high)
+    dd 0 ; IST3 (low)
+    dd 0 ; IST3 (high)
+    dd 0 ; IST4 (low)
+    dd 0 ; IST4 (high)
+    dd 0 ; IST5 (low)
+    dd 0 ; IST5 (high)
+    dd 0 ; IST6 (low)
+    dd 0 ; IST6 (high)
+    dd 0 ; IST7 (low)
+    dd 0 ; IST7 (high)
+    dd 0 ; Reserved
+    dd 0 ; Reserved
+    dd 0 ; IOPB (bytes 0x66 and 0x67) + Reserved (bytes 0x64 abd 0x65)
+tss_end:
 
 section .magic
 dw 0xAA55

@@ -20,6 +20,8 @@ SECTIONS
         *(.extended_bootloader)
     }
 
+    . = 0x8000;
+
     /DISCARD/ :
     {
         *(.bss*)

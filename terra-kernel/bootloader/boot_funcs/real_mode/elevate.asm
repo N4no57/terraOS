@@ -3,6 +3,9 @@ switch_protected_mode:
     ; Disable interrupts
     cli
 
+    ; do the GDT TSS entry
+    mov ax, gdt + 0x30
+
     lgdt [gdt_descriptor] ; load GDT
 
     mov eax, cr0

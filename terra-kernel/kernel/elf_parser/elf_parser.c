@@ -47,7 +47,7 @@ u32     load_elf(struct task task, void *elf_data) {
     map_page((page_table_t){task.pml4t, false}, user_stack, (u64)user_stack_phys, 0x7);
 
     __asm__ volatile (
-        "mov %0, %%rsp"
+        "mov %0, %%rsp\n\t"
         "mov %%rsp, %%rbp"
         :
         : "r"(user_stack)
