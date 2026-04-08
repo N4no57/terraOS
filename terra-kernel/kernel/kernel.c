@@ -116,31 +116,13 @@ void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
 
     void *tmp = pmm_alloc();
     user_program.pml4t = (u64 *)(tmp + KERNEL_BASE);
-    map_page((page_table_t){pml4t, true}, (void *)user_program.pml4t, tmp, 0x3);
-    memset(user_program.pml4t, 0, 0x1000);
-
-    for (u32 i = 0; i < 512; i++) {
-        u64 *pdpt = (u64 *)((pml4t[511] & PAGE_MASK) + KERNEL_BASE);
-        u64 *pdt = (u64 *)((pdpt[510] & PAGE_MASK) + KERNEL_BASE);
-
-        u64 pt_flags = (u64)(pdt[i] & ~PAGE_MASK);
-        void *pdt_phys = (pdt[i] & PAGE_MASK);
-        temp_map(pdt_phys);
-        u64 *pt = (u64 *)TEMP_PAGE;
-        
-        if (!(pt_flags & 1)) continue; // if it isn't present then skip
-
-        for (u32 j = 0; j < 512; j++) {
-            temp_map(pdt_phys);
-            void *phys_addr = (void *)(pt[j] & PAGE_MASK);
-            map_page((page_table_t){user_program.pml4t, false}, KERNEL_BASE + (0x1000 * j) + (0x200000 * i), phys_addr, 0x3);
-        }
-    }
+    map_page((page_table_t){pml4t, true}, (u64)user_program.pml4t, (u64)tmp, 0x3);
+    memcpy(user_program.pml4t, pml4t, 0x1000);
 
     __asm__ volatile (
         "mov %0, %%cr3"
         :
-        : "r"((void *)get_physical_address((page_table_t){pml4t, true}, (void *)user_program.pml4t))
+        : "r"((void *)get_physical_address((page_table_t){pml4t, true}, (u64)user_program.pml4t))
     );
 
     load_elf(user_program, (void *)user_program_elf);

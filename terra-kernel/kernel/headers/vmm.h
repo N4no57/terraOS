@@ -26,5 +26,6 @@ typedef struct {
 void map_page(page_table_t ctx, u64 virtual_address, u64 physical_address, u64 flags);
 void unmap_page(page_table_t ctx, u64 virtual_address);
 u64 get_physical_address(page_table_t ctx, u64 virtual_address);
+void tlb_invalidate(void *addr);
 
 #endif

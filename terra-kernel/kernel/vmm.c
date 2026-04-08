@@ -5,8 +5,8 @@
 /**
  * @param addr A virtual address
  */
-static inline void tlb_invalidate(void *addr) {
-    asm volatile("invlpg (%0)" :: "r"(addr) : "memory");
+void tlb_invalidate(void *addr) {
+    __asm__ volatile("invlpg (%0)" :: "r"(addr) : "memory");
 }
 
 void temp_map(u64 physical_address) {
