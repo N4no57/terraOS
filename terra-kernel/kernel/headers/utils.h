@@ -19,15 +19,17 @@ typedef u64 size_t;
 #define POOL_START  0xFFFFFFFF80020000
 #define POOL_END    0xFFFFFFFF801FF000
 #define KERNEL_END  0xFFFFFFFF80200000
+
 #define PAGE_SIZE   0x1000
+#define PAGE_MASK   0x000FFFFFFFFFF000
 
 #define NULL ((void*)0)
 
-#define IA32_EFER 0xC0000080
-#define STAR_MSR 0xC0000081
-#define LSTAR_MSR 0xC0000082
-#define CSTAR_MSR 0xC0000083
-#define SFMASK_MSR 0xC0000084
+#define IA32_EFER   0xC0000080
+#define STAR_MSR    0xC0000081
+#define LSTAR_MSR   0xC0000082
+#define CSTAR_MSR   0xC0000083
+#define SFMASK_MSR  0xC0000084
 
 typedef struct {
     u64 base_addr;
