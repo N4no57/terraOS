@@ -4,6 +4,8 @@
 #include "utils.h"
 #include <stdbool.h>
 
+#define TEMP_PAGE 0xFFFFFFFF801FF000
+
 // page table flag bits:
 // 0	P (Present)	Must be 1 or page fault occurs
 // 1	RW (Read/Write)	0 = read-only, 1 = writable

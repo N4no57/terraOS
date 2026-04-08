@@ -1,8 +1,6 @@
 #include "headers/vmm.h"
 #include "headers/pmm.h"
 
-#define PAGE_MASK 0x000FFFFFFFFFF000
-#define TEMP_PAGE 0xFFFFFFFF801FF000
 
 /**
  * @param addr A virtual address
