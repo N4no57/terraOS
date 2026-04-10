@@ -24,3 +24,4 @@ mmap_loop:
     test ebx, ebx
     jne mmap_loop
 mmap_end:
+    ret

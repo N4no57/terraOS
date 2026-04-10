@@ -4,7 +4,34 @@ switch_protected_mode:
     cli
 
     ; do the GDT TSS entry
-    mov ax, gdt + 0x30
+    mov si, gdt + 0x30
+    mov bx, tss_end - tss - 1
+    mov [si], bx
+    add si, 0x2 ; move to limit base low
+    mov bx, tss
+    mov [si], bx
+    add si, 0x2 ; move to base middle
+    mov bl, 0
+    mov [si], bl
+    inc si ; move to access byte
+    mov bl, 0x89
+    mov [si], bl
+    inc si ; move to limit middle
+    mov bl, 0
+    mov [si], bl
+    inc si ; move to base high
+    mov bl, 0x80
+    mov [si], bl
+    inc si ; move to base upper (low 16-bits)
+    mov bx, 0xFFFF
+    mov [si], bx
+    add si, 0x2
+    mov [si], bx
+
+    ; set IOBP to sizeof(TSS)
+    mov si, tss + 0x66
+    mov bx, tss_end - tss - 1
+    mov [si], bx
 
     lgdt [gdt_descriptor] ; load GDT
 
