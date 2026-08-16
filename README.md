@@ -1,0 +1,1 @@
+I made this readme as an update for the 0 people who look at this. The spikes on the other projects is me taking a break from this project. X86 is an old and stinky architecture which means I have to deal with the old stinky stuff that comes with it. That means I eventually for fed up with it. I will be back for you TerraOS.
