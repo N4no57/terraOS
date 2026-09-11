@@ -167,12 +167,12 @@ sector_var: dw 0
 mmap_entry_count: dq 0
 
 gdt:
-    dq 0                    ; null descriptor
-    dq 0x00CF9A000000FFFF   ; 32-bit kernel code segment descriptor
-    dq 0x00CF92000000FFFF   ; kernel data segment descriptor
-    dq 0x00AF9A000000FFFF   ; 64-bit kernel code segment descriptor
-    dq 0x00CFF2000000FFFF   ; user data segment descriptor
-    dq 0x00AFFA000000FFFF   ; user code segment descriptor
+    dq 0                    ; null descriptor                           0x0
+    dq 0x00CF9A000000FFFF   ; 32-bit kernel code segment descriptor     0x8
+    dq 0x00CF92000000FFFF   ; kernel data segment descriptor            0x10
+    dq 0x00AF9A000000FFFF   ; 64-bit kernel code segment descriptor     0x18
+    dq 0x00CFF2000000FFFF   ; user data segment descriptor              0x20
+    dq 0x00AFFA000000FFFF   ; user code segment descriptor              0x28
     ; TSS descriptor
     dq 0
     dq 0

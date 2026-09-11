@@ -4,7 +4,24 @@
 
 static u8 magic[4] = {0x7F, 'E', 'L', 'F'};
 
-u32     load_elf(struct task task, void *elf_data) {
+__attribute__((noreturn))
+void jump_user_mode(u64 user_stack, u64 entry_point) {
+    __asm__ volatile (
+        "pushq $0x23\n\t"       /* user SS */
+        "pushq %[ustack]\n\t"   /* user RSP */
+        "pushq $0x202\n\t"      /* RFLAGS */
+        "pushq $0x2B\n\t"       /* user CS */
+        "pushq %[entry]\n\t"    /* user RIP */
+        "iretq\n\t"
+        :
+        : [ustack] "r"(user_stack), [entry] "r"(entry_point)
+        : "memory"
+    );
+
+    __builtin_unreachable();
+}
+
+u32 load_elf(struct task task, void *elf_data) {
     Elf64_Ehdr *ehdr = (Elf64_Ehdr *)elf_data;
     for (u64 i = 0; i < 4; i++) {
         if (ehdr->e_ident[i] != magic[i]) return 0x10; // abort cus magic is wrong
@@ -46,30 +63,7 @@ u32     load_elf(struct task task, void *elf_data) {
     u64 user_stack = 0x700000000000;
     map_page((page_table_t){task.pml4t, false}, user_stack, (u64)user_stack_phys, 0x7);
 
-    __asm__ volatile (
-        "mov %0, %%rsp\n\t"
-        "mov %%rsp, %%rbp"
-        :
-        : "r"(user_stack)
-    );
-
-    __asm__ volatile (
-        "mov %0, %%rcx"
-        :
-        : "r"(entry)
-        : "rcx"
-    );
-
-    __asm__ volatile (
-        "mov %0, %%r11"
-        :
-        : "i"(0)
-        : "r11"
-    );
-
-    __asm__ volatile (
-        "sysret"
-    );
+    load_elf(task, elf_data);
 
     return 0;
 }
