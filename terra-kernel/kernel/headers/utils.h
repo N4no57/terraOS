@@ -72,6 +72,9 @@ void panic(const char* message) __attribute__((noreturn));
 u64 read_msr(u32 msr);
 void write_msr(u32 msr, u64 val);
 
+void finish_tss_setup();
+void relocate_gdt();
+
 extern u16 *VGA_MEMORY;
 
 extern u64 next_free;

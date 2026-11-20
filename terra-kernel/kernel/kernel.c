@@ -4791,11 +4791,6 @@ static u8 user_program_elf[] = {
 0x00,
 };
 
-typedef struct __attribute__((packed)) {
-    u16 limit;
-    u64 base;
-} gdt_descriptor_t;
-
 void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
     // init IDT for reasons unbeknownst to man
     idt_init();
@@ -4847,40 +4842,6 @@ void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
     while (1) {
         __asm__ volatile ("hlt");
     }
-}
-
-void syscall_handler() {
-    // currently does nothing
-    static char syscall_message[] = "syscall has occurred :O";
-
-    for (u8 i = 0; syscall_message[i] != '\0'; i++) {
-        VGA_MEMORY[i] = 0x0F00 | syscall_message[i];
-    }
-
-    while (1) {
-        __asm__ volatile ("hlt");
-    }
-}
-
-extern void syscall_stub();
-
-void enable_syscall() {
-    // enable syscall and sysret
-    u64 IA32_EFER_VAL = read_msr(IA32_EFER);
-    IA32_EFER_VAL |= 1;
-    write_msr(IA32_EFER, IA32_EFER_VAL);
-
-    // set syscall segments
-    u64 STAR_MSR_VAL = (0x18 << 32) | (0x28 << 48) | 0;
-    write_msr(STAR_MSR, STAR_MSR_VAL);
-
-    // set syscall subroutine address
-    u64 LSTAR_MSR_VAL = (u64)&syscall_stub;
-    write_msr(LSTAR_MSR, LSTAR_MSR_VAL);
-
-    // set flags reg mask to 0
-    u64 SFMASK_MSR_VAL = 0;
-    write_msr(SFMASK_MSR, SFMASK_MSR_VAL);
 }
 
 void sse_init() {
@@ -4943,81 +4904,6 @@ void paging_init() {
     );
 }
 
-u64 v2p(void* v) {
+u64 v2p(void* v) { // only use this for kernel addresses otherwise it will return the wrong value
     return (u64)v - KERNEL_BASE;
-}
-
-typedef struct __attribute__((packed)) {
-    u16 limit_low;
-    u16 base_low;
-    u8 base_lmid;
-    u8 access_byte;
-    u8 flags_limit_high;
-    u8 base_hmid;
-    u32 base_high;
-    u32 reserved;
-} gdt_entry_64;
-
-typedef struct __attribute__((packed)) {
-    u32 reserved1;
-    u64 rsp0;
-    u64 rsp1;
-    u64 rsp2;
-    u64 reserved2;
-    u64 ist1;
-    u64 ist2;
-    u64 ist3;
-    u64 ist4;
-    u64 ist5;
-    u64 ist6;
-    u64 ist7;
-    u64 reserved3;
-    u16 reserved4;
-    u16 io_map_base;
-} tss_t;
-
-void finish_tss_setup() {
-    gdt_descriptor_t gdtr;
-
-    asm volatile (
-        "sgdt %0"
-        : "=m"(gdtr)
-    );
-
-    gdt_entry_64 *tss_descriptor;
-
-    __asm__ volatile (
-        "mov %1, %%rsi\n\t"
-        "add $0x30, %%rsi\n\t"
-        "mov %%rsi, %0\n\t"
-        : "=m"(tss_descriptor)
-        : "g"(gdtr.base)
-        : "%rsi"
-    );
-
-    u64 base = tss_descriptor->base_low | ((u64)tss_descriptor->base_lmid << 16) | ((u64)tss_descriptor->base_hmid << 24) | ((u64)tss_descriptor->base_high << 32);
-    tss_t *tss = (tss_t *)(base);
-
-    tss->rsp0 = ((u64)alloc_page() + PAGE_SIZE) & -16; // allocate a new stack for ring 0
-    tss->ist1 = ((u64)alloc_page() + PAGE_SIZE) & -16; // allocate a new stack for IST1
-}
-
-void relocate_gdt() {
-    gdt_descriptor_t gdtr;
-
-    asm volatile (
-        "sgdt %0"
-        : "=m"(gdtr)
-    );
-
-    // Convert the physical/identity-mapped address
-    // into its higher-half virtual address.
-    gdtr.base += KERNEL_BASE;
-
-    asm volatile (
-        "lgdt %0"
-        :
-        : "m"(gdtr)
-        : "memory"
-    );
 }
