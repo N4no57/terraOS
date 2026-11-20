@@ -1,6 +1,6 @@
 __attribute__((naked))
-int main() {
+void _start(void) {
     asm("syscall");
 
-    __builtin_unreachable();
+    while (1) {}
 }
