@@ -63,7 +63,7 @@ u32 load_elf(struct task task, void *elf_data) {
     u64 user_stack = 0x700000000000;
     map_page((page_table_t){task.pml4t, false}, user_stack, (u64)user_stack_phys, 0x7);
 
-    load_elf(task, elf_data);
+    jump_user_mode(user_stack, entry);
 
     return 0;
 }

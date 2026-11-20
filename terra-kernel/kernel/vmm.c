@@ -152,7 +152,7 @@ void unmap_page(page_table_t ctx, u64 virtual_address) {
 
 /**
  * @param ctx basically a pointer to a page table in a nice wrapper
- * @param virtual_address the virtual address the you want to be unmapped
+ * @param virtual_address the virtual address the you want to get the physical address of
  * @return the physical address that the virtual address in this page table is allocated to
  */
 u64 get_physical_address(page_table_t ctx, u64 virtual_address) {
