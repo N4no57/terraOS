@@ -24,6 +24,10 @@ u64 mem_bitmap_bit_size = 0; // in bits
 void *heap_start = 0;
 void *heap_end = 0;
 
+extern u64 syscall_stack;
+
+u64 syscall_stack = 0;
+
 static u8 user_program_elf[] = {
     0x7f,
 0x45,
@@ -4822,6 +4826,7 @@ void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
     memset((void*)VGA_MEMORY, 0, 80 * 25 * 2); // clear screen
 
     enable_syscall();
+    syscall_stack = ((u64)(alloc_page() + PAGE_SIZE) & -16); // allocate a page for the syscall stack
 
     struct task user_program = {0};
     user_program.pid = 1;
@@ -4846,7 +4851,7 @@ void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
 
 void syscall_handler() {
     // currently does nothing
-    static char syscall_message[] = "syscall has occured :O";
+    static char syscall_message[] = "syscall has occurred :O";
 
     for (u8 i = 0; syscall_message[i] != '\0'; i++) {
         VGA_MEMORY[i] = 0x0F00 | syscall_message[i];
