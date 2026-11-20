@@ -122,5 +122,5 @@ void idt_init(void) {
     __asm__ volatile ("lidt %0" : : "m"(idtp));
 
     // Enable interrupts
-    __asm__ volatile ("sti");
+    // __asm__ volatile ("sti");
 }

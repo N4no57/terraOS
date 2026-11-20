@@ -10,6 +10,7 @@ void syscall_handler();
 void enable_syscall();
 void sse_init();
 void paging_init();
+void relocate_gdt();
 u64 v2p(void* v);
 
 u16 *VGA_MEMORY = (u16*)(KERNEL_BASE + 0xB8000);
@@ -83,6 +84,11 @@ static u8 user_program_elf[] = {
     0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
+typedef struct __attribute__((packed)) {
+    u16 limit;
+    u64 base;
+} gdt_descriptor_t;
+
 void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
     // init IDT for reasons unbeknownst to man
     idt_init();
@@ -98,6 +104,10 @@ void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
 
     paging_init();
     pmm_init(mmap, mmap_count);
+
+    // a little thing to set before we continue: fix gdt address
+    relocate_gdt();
+    __asm__ volatile ("sti"); // due to problems
 
     heap_start = alloc_page();
     for (u8 i = 0; i < 3; i++) {
@@ -226,4 +236,28 @@ void paging_init() {
 
 u64 v2p(void* v) {
     return (u64)v - KERNEL_BASE;
+}
+
+void relocate_gdt() {
+    gdt_descriptor_t gdtr;
+
+    asm volatile (
+        "sgdt %0"
+        : "=m"(gdtr)
+    );
+
+    // kprintf("GDTR base: %p\n", (void*)gdtr.base);
+
+    // Convert the physical/identity-mapped address
+    // into its higher-half virtual address.
+    gdtr.base += KERNEL_BASE;
+
+    // kprintf("GDTR base: %p\n", (void*)gdtr.base);
+
+    asm volatile (
+        "lgdt %0"
+        :
+        : "m"(gdtr)
+        : "memory"
+    );
 }
