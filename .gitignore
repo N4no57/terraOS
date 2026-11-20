@@ -1,3 +1,4 @@
 build/
 floppy.img
 .vscode/
+qemu.log

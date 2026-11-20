@@ -1,4 +1,6 @@
+__attribute__((naked))
 int main() {
     asm("syscall");
-    return 0;
+
+    __builtin_unreachable();
 }
