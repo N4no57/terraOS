@@ -105,8 +105,8 @@ void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
     paging_init();
     pmm_init(mmap, mmap_count);
 
-    // a little thing to set before we continue: fix gdt address
-    relocate_gdt();
+    // relocate GDT address of descriptor to higher half
+    relocate_gdt(); // TODO TSS descriptor in GDT is also old physical address
     __asm__ volatile ("sti"); // due to problems
 
     heap_start = alloc_page();
