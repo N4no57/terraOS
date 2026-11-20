@@ -1,4 +1,4 @@
-#include "utils.h"
+#include "../headers/utils.h"
 
 void syscall_handler() {
     // currently does nothing
@@ -22,7 +22,7 @@ void enable_syscall() {
     write_msr(IA32_EFER, IA32_EFER_VAL);
 
     // set syscall segments
-    u64 STAR_MSR_VAL = (0x18 << 32) | (0x28 << 48) | 0;
+    u64 STAR_MSR_VAL = (0x18ull << 32ull) | (0x28ull << 48ull) | 0;
     write_msr(STAR_MSR, STAR_MSR_VAL);
 
     // set syscall subroutine address
