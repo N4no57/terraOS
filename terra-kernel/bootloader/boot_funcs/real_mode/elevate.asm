@@ -4,6 +4,7 @@ switch_protected_mode:
     cli
 
     ; do the GDT TSS entry
+    ; GDT entry for TSS will be set for the higher half address space
     mov si, gdt + 0x30
     mov bx, tss_end - tss - 1
     mov [si], bx

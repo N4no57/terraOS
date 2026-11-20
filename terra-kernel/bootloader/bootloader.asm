@@ -173,7 +173,7 @@ gdt:
     dq 0x00AF9A000000FFFF   ; 64-bit kernel code segment descriptor     0x18
     dq 0x00CFF2000000FFFF   ; user data segment descriptor              0x20
     dq 0x00AFFA000000FFFF   ; user code segment descriptor              0x28
-    ; TSS descriptor
+    ; TSS descriptor 0x30
     dq 0
     dq 0
 gdt_end:
