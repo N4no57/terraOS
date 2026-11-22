@@ -157,17 +157,9 @@ void outw(u16 port, u16 val) {
     );
 }
 
-void outd(u16 port, u32 val) {
+void outl(u16 port, u32 val) {
     __asm__ volatile (
-        "outd %0, %1"
-        :
-        : "a"(val), "Nd"(port)
-    );
-}
-
-void outq(u16 port, u64 val) {
-    __asm__ volatile (
-        "outq %0, %1"
+        "outl %0, %1"
         :
         : "a"(val), "Nd"(port)
     );
@@ -197,23 +189,11 @@ u16 inw(u16 port) {
     return val;
 }
 
-u32 ind(u16 port) {
+u32 inl(u16 port) {
     u32 val;
 
     __asm__ volatile (
-        "ind %1, %0"
-        : "=a"(val)
-        : "Nd"(port)
-    );
-
-    return val;
-}
-
-u64 inq(u16 port) {
-    u64 val;
-
-    __asm__ volatile (
-        "inq %1, %0"
+        "inl %1, %0"
         : "=a"(val)
         : "Nd"(port)
     );

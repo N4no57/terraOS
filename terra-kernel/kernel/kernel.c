@@ -3,6 +3,7 @@
 #include "headers/vmm.h"
 #include "headers/kheap.h"
 #include "headers/idt.h"
+#include "headers/fdc.h"
 #include "headers/elf_parser.h"
 
 void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) __attribute__((section(".kernel")));
@@ -60,6 +61,8 @@ void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
     syscall_stack = ((u64)(alloc_page() + PAGE_SIZE) & -16); // allocate a page for the syscall stack
 
     // file system testing
+
+    fdc_init();
 
     while (1) {
         __asm__ volatile ("hlt");
