@@ -75,6 +75,16 @@ void write_msr(u32 msr, u64 val);
 void finish_tss_setup();
 void relocate_gdt();
 
+void outb(u16 port, u8 val);
+void outw(u16 port, u16 val);
+void outd(u16 port, u32 val);
+void outq(u16 port, u64 val);
+
+u8 inb(u16 port);
+u16 inw(u16 port);
+u32 ind(u16 port);
+u64 inq(u16 port);
+
 extern u16 *VGA_MEMORY;
 
 extern u64 next_free;

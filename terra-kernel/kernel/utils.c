@@ -140,3 +140,83 @@ void relocate_gdt() {
         : "memory"
     );
 }
+
+void outb(u16 port, u8 val) {
+    __asm__ volatile (
+        "outb %0, %1"
+        :
+        : "a"(val), "Nd"(port)
+    );
+}
+
+void outw(u16 port, u16 val) {
+    __asm__ volatile (
+        "outw %0, %1"
+        :
+        : "a"(val), "Nd"(port)
+    );
+}
+
+void outd(u16 port, u32 val) {
+    __asm__ volatile (
+        "outd %0, %1"
+        :
+        : "a"(val), "Nd"(port)
+    );
+}
+
+void outq(u16 port, u64 val) {
+    __asm__ volatile (
+        "outq %0, %1"
+        :
+        : "a"(val), "Nd"(port)
+    );
+}
+
+u8 inb(u16 port) {
+    u8 val;
+
+    __asm__ volatile (
+        "inb %1, %0"
+        : "=a"(val)
+        : "Nd"(port)
+    );
+
+    return val;
+}
+
+u16 inw(u16 port) {
+    u16 val;
+
+    __asm__ volatile (
+        "inw %1, %0"
+        : "=a"(val)
+        : "Nd"(port)
+    );
+
+    return val;
+}
+
+u32 ind(u16 port) {
+    u32 val;
+
+    __asm__ volatile (
+        "ind %1, %0"
+        : "=a"(val)
+        : "Nd"(port)
+    );
+
+    return val;
+}
+
+u64 inq(u16 port) {
+    u64 val;
+
+    __asm__ volatile (
+        "inq %1, %0"
+        : "=a"(val)
+        : "Nd"(port)
+    );
+
+    return val;
+}
