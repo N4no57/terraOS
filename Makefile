@@ -1,8 +1,10 @@
 CROSS_GCC := $(HOME)/opt/cross64/bin/x86_64-elf-gcc
+CROSS_LINK := $(HOME)/opt/cross64/bin/x86_64-elf-ld
 CROSS_AS  := nasm
 
 INCLUDES := -I terra-kernel/kernel
-CFLAGS := -ffreestanding -Wall -nostdlib -mcmodel=kernel -O0 -fno-omit-frame-pointer
+CFLAGS := -ffreestanding -Wall -nostdlib -mcmodel=kernel -O3 -flto -fno-omit-frame-pointer
+LDFLAGS := -flto
 
 kernel_c_files := $(shell find terra-kernel/kernel -name '*.c')
 kernel_asm_files := $(shell find terra-kernel/kernel -name '*.asm')
@@ -24,18 +26,19 @@ build-objs: $(kernel_c_object_files) $(kernel_asm_object_files)
 bootloader:
 	mkdir -vp build/bootloader
 	$(CROSS_AS) -f elf64 terra-kernel/bootloader/bootloader.asm -o build/bootloader/boot.o
-	ld -m elf_x86_64 -T linker/bootloader.ld build/bootloader/boot.o -o build/boot.bin
+	$(CROSS_LINK) $(LDFLAGS) -m elf_x86_64 -T linker/bootloader.ld build/bootloader/boot.o -o build/boot.bin
 
 kernel: build-objs
-	ld -m elf_x86_64 -T linker/kernel.ld -o build/kernel.bin $(kernel_c_object_files) $(kernel_asm_object_files)
+	$(CROSS_LINK) $(LDFLAGS) -m elf_x86_64 -T linker/kernel.ld -o build/kernel.bin $(kernel_c_object_files) $(kernel_asm_object_files)
 
-image: clean bootloader kernel
+image: bootloader kernel # clean
 	dd if=/dev/zero of=floppy.img bs=512 count=2880
 	mkfs.fat -F 12 -R 2 floppy.img
 	dd if=build/boot.bin of=floppy.img bs=1 seek=62 conv=notrunc
 	sudo mkdir -p /mnt/floppy
 	sudo mount -o loop -t vfat floppy.img /mnt/floppy
 	sudo cp build/kernel.bin /mnt/floppy/
+	sudo cp test.elf /mnt/floppy/
 	sudo umount /mnt/floppy
 	sudo rm -rf /mnt/floppy
 
