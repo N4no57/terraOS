@@ -2,8 +2,16 @@
 #include "../headers/kheap.h"
 
 BlockDevice *block_devices;
-u64 block_device_count;
-u64 block_device_capacity;
+u32 block_device_count;
+u32 block_device_capacity;
+
+u32 ids = 0;
+
+// all block device id's are managed by this system
+
+u32 get_next_id() {
+    return ids++;
+}
 
 int init_block_device_interface() {
     block_device_capacity = 10; // Initial capacity
@@ -31,6 +39,8 @@ int register_block_device(BlockDevice *device) {
 
         block_devices = new_array;
     }
+
+    device->id = get_next_id();
 
     block_devices[block_device_count++] = *device;
 
