@@ -77,7 +77,7 @@ u8 fdc_check_status() {
 
 void fdc_send_command(FloppyCommands command) {
     for (int i = 0; i < 500; i++) {
-        if ((fdc_check_status() & 0xC0) == MSR_MASK_DATAREG) { // check if the controller is ready to accept a command
+        if (fdc_check_status() & MSR_MASK_DATAREG) { // check if the controller is ready to accept a command
             outb(DATA_FIFO, command);
             return;
         }
@@ -86,7 +86,7 @@ void fdc_send_command(FloppyCommands command) {
 
 u8 fdc_read_data() {
     for (int i = 0; i < 500; i++) {
-        if ((fdc_check_status() & 0xC0) == MSR_MASK_DATAREG) {
+        if (fdc_check_status() & MSR_MASK_DATAREG) {
             return inb(DATA_FIFO);
         }
     }
@@ -114,6 +114,8 @@ int fdc_init() {
 
 int fdc_reset() {
     
+
+    return 0;
 }
 
 void read_sector(u32 lba, u8 *buffer) {
