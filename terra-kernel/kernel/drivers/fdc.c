@@ -21,7 +21,7 @@ typedef enum {
 	DOR_MASK_DRIVE2			=	2,	//00000010
 	DOR_MASK_DRIVE3			=	3,	//00000011
 	DOR_MASK_RESET			=	4,	//00000100
-	DOR_MASK_DMA			=	8,	//00001000
+	DOR_MASK_DMA			=	8,	//00001000      - is for both DMA and IRQs
 	DOR_MASK_DRIVE0_MOTOR		=	16,	//00010000
 	DOR_MASK_DRIVE1_MOTOR		=	32,	//00100000
 	DOR_MASK_DRIVE2_MOTOR		=	64,	//01000000
@@ -57,10 +57,11 @@ typedef enum {
    SCAN_EQUAL =                 17,
    PERPENDICULAR_MODE =         18,	    // * used during initialization, once, maybe
    CONFIGURE =                  19,     // * set controller parameters
-   LOCK =                       20,     // * protect controller params from a reset
+   UNLOCK =                     20,
    VERIFY =                     22,
    SCAN_LOW_OR_EQUAL =          25,
-   SCAN_HIGH_OR_EQUAL =         29
+   SCAN_HIGH_OR_EQUAL =         29,
+   LOCK =                       0x94    // * protect controller params from a reset
 } FloppyCommands;
 
 void lba_2_chs(u32 lba, u16 *cyl, u16 *head, u16 *sector) {
@@ -84,13 +85,64 @@ void fdc_send_command(FloppyCommands command) {
     }
 }
 
-u8 fdc_read_data() {
+void fdc_send_data(u8 byte) {
+    for (int i = 0; i < 500; i++) {
+        if (fdc_check_status() & MSR_MASK_DATAREG) { // check if the controller is ready to accept data
+            outb(DATA_FIFO, byte);
+            return;
+        }
+    }
+}
+
+i16 fdc_read_data() {
     for (int i = 0; i < 500; i++) {
         if (fdc_check_status() & MSR_MASK_DATAREG) {
             return inb(DATA_FIFO);
         }
     }
-    return 0; // return smth if no data
+    return -1; // return smth if no data
+}
+
+int fdc_configure() {
+    fdc_send_command(UNLOCK); // unlock
+
+    if ((fdc_read_data() & 0x10)) {
+        return 1;
+    }
+    
+    // drive polling mode on, FIFO on, threshold = 8, implied seek on, precompensation 0.
+    u8 configure_byte = (1 << 6) | 8;
+
+    fdc_send_command(CONFIGURE);
+    fdc_send_data(0);
+    fdc_send_data(configure_byte);
+    fdc_send_data(0);
+
+    // lock because I don't want these settings to change unless explicitly using this function
+    fdc_send_command(LOCK);
+
+    if (!(fdc_read_data() & 0x10)) {
+        return 1;
+    }
+
+    return 0;
+}
+
+void drive_motor(u8 drive) {
+    outb(DIGITAL_OUTPUT_REGISTER, (drive & 0x02) << 4);
+}
+
+void drive_select(u8 drive) {
+    outb(CONFIGURATION_CONTROL_REGISTER, 0x00); // 500Kbps for 1.44M floppy
+
+    u8 steprate = 0xD2;
+    u8 headload = 0x1F;
+
+    fdc_send_command(SPECIFY);
+    fdc_send_data(steprate);
+    fdc_send_data(headload);
+
+    outb(DIGITAL_OUTPUT_REGISTER, drive & 0x02);
 }
 
 int fdc_init() {
@@ -101,19 +153,33 @@ int fdc_init() {
         return -1;
     }
 
-    // TODO configure fdc parameters
+    if (fdc_configure() != 0) {
+        return -1;
+    }
 
     if (fdc_reset() != 0) {
         return -1;
     }
 
-    // TODO send recalibrate command to each drive
+    for (int i = 0; i < 4; i++) {
+        fdc_send_command(RECALIBRATE);
+        fdc_send_data(i);
+    }
 
     return 0;
 }
 
 int fdc_reset() {
-    
+    // Enter, then exit reset mode.
+    outb(DIGITAL_OUTPUT_REGISTER, 0x00);
+    outb(DIGITAL_OUTPUT_REGISTER, 0x0C);
+
+    // sense interrupt -- 4 of them typically required after a reset
+    for (int i = 0; i < 4; i++) {
+        fdc_send_command(SENSE_INTERRUPT);
+    }
+
+    drive_select(0);
 
     return 0;
 }
