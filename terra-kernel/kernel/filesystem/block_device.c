@@ -1,11 +1,10 @@
 #include "../headers/block_device.h"
 #include "../headers/kheap.h"
 
-BlockDevice *block_devices;
-u32 block_device_count;
-u32 block_device_capacity;
-
-u32 ids = 0;
+static BlockDevice *block_devices = NULL;
+static u32 block_device_count = 0;
+static u32 block_device_capacity = 0;
+static u32 ids = 0;
 
 // all block device id's are managed by this system
 

@@ -6,9 +6,9 @@ typedef struct BlockDevice {
     u64 sector_count;
     u32 sector_size;
     
-    int (*read_sector)(BlockDevice *device, u32 lba, u32 count, void *buffer);
+    int (*read_sector)(struct BlockDevice *device, u32 lba, u32 count, void *buffer);
 
-    int (*write_sector)(BlockDevice *device, u32 lba, u32 count, void *buffer);
+    int (*write_sector)(struct BlockDevice *device, u32 lba, u32 count, void *buffer);
 
     void *driver_data; // Pointer to driver-specific data
 } BlockDevice;
