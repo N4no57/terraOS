@@ -4,6 +4,7 @@
 #include "headers/kheap.h"
 #include "headers/idt.h"
 #include "headers/fdc.h"
+#include "headers/block_device.h"
 #include "headers/elf_parser.h"
 
 void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) __attribute__((section(".kernel")));
@@ -29,7 +30,21 @@ extern u64 syscall_stack;
 
 u64 syscall_stack = 0;
 
+u64 guh = 0;
+
+extern u8 __bss_start[];
+extern u8 __bss_end[];
+
+// FFFFFFFF80013C40
+// FFFFFFFF80014CCA
+
 void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
+    memset(
+        __bss_start,
+        0,
+        (u64)__bss_end - (u64)__bss_start
+    );
+    
     // init IDT. Doing it first is for reasons unbeknownst to man
     idt_init();
     sse_init();
@@ -61,6 +76,15 @@ void kernel_main(bios_mmap_entry *mmap, u64 mmap_count) {
     syscall_stack = ((u64)(alloc_page() + PAGE_SIZE) & -16); // allocate a page for the syscall stack
 
     // file system testing
+
+    // init_block_device_interface();
+
+    // BlockDevice floppy_disk = {
+    //     .read_sector = NULL,
+    //     .write_sector = NULL,
+    // };
+
+    // register_block_device(&floppy_disk);
 
     fdc_init();
 

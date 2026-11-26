@@ -23,6 +23,12 @@ SECTIONS
 
 	.bss ALIGN(0x10) :
 	{
-		*(.bss)
+		__bss_start = .;
+        *(.bss)
+		*(.bss.*)
+        *(COMMON)
+		__bss_end = .;
 	}
 }
+
+
