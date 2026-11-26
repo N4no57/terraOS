@@ -3,8 +3,8 @@ CROSS_LINK := $(HOME)/opt/cross64/bin/x86_64-elf-ld
 CROSS_AS  := nasm
 
 INCLUDES := -I terra-kernel/kernel
-CFLAGS := -ffreestanding -Wall -nostdlib -mcmodel=kernel -O3 -flto -fno-omit-frame-pointer
-LDFLAGS := -flto
+CFLAGS := -ffreestanding -Wall -nostdlib -mcmodel=kernel -O0 -fno-omit-frame-pointer # -flto
+LDFLAGS := # -flto
 
 kernel_c_files := $(shell find terra-kernel/kernel -name '*.c')
 kernel_asm_files := $(shell find terra-kernel/kernel -name '*.asm')
@@ -44,7 +44,7 @@ image: bootloader kernel # clean
 
 debug: image
 	mkdir -vp build/debug
-	ld -m elf_x86_64 -T linker/kernel_debug.ld -o build/debug/kernel.elf $(kernel_c_object_files) $(kernel_asm_object_files)
+	$(CROSS_LINK) $(LDFLAGS) -m elf_x86_64 -T linker/kernel_debug.ld -o build/debug/kernel.elf $(kernel_c_object_files) $(kernel_asm_object_files)
 
 clean:
 	rm -rfv build
