@@ -130,14 +130,12 @@ void short_name_to_long_name(char name[8], char ext[3], char long_name[13*2]) {
 }
 
 int delete_entry(FATVolume *volume, char name[8], char ext[3]) {
-
+    return 0;
 }
 
 fat12_directory_t generate_entry(char name[8], char ext[3], u8 flags) {
     fat12_directory_t entry = {
         .entry = {
-            .filename = name,
-            .extension = ext,
             .attributes = flags,
             .reserved = 0,
             .creation_time = 0, // TODO
@@ -151,17 +149,17 @@ fat12_directory_t generate_entry(char name[8], char ext[3], u8 flags) {
         },
         .long_name = {
             .order = 0x41,
-            .name1 = 0,
             .attributes = 0x0F,
             .type = 0,
-            .name2 = 0,
             .first_cluster_low = 0,
-            .name3 = 0
         }
     };
 
+    memcpy(entry.entry.filename, name, 8);
+    memcpy(entry.entry.extension, ext, 3);
+
     u16 long_name[13];
-    short_name_to_long_name(entry.entry.filename, entry.entry.extension, (char *)long_name);
+    short_name_to_long_name((char *)entry.entry.filename, (char *)entry.entry.extension, (char *)long_name);
 
     memcpy(entry.long_name.name1, long_name, sizeof(u16) * 5);
     memcpy(entry.long_name.name2, long_name, sizeof(u16) * 6);
@@ -175,29 +173,30 @@ int create_entry(FATVolume *volume, char name[8], char ext[3], u8 flags) {
 
     char sector[volume->metadata.bytes_per_sector * volume->metadata.sectors_per_cluster];
 
+    u16 entry_location = 0;
+
     volume->device->read_sector(volume->device, volume->cwd, 1, sector);
 
-    u16 entry_location;
-    for (int i = 0; i < volume->metadata.bytes_per_sector * volume->metadata.sectors_per_cluster / 64; i++) {
-        if (sector[i*64] == 0 || sector[i*64] == 0xE5) {
-            entry_location = i*64;
+    for (int j = 0; j < volume->metadata.bytes_per_sector * volume->metadata.sectors_per_cluster / 64; j++) {
+        if (sector[j*64] == 0 || sector[j*64] == 0xE5) {
+            entry_location = j*64;
             break;
         }
     }
 
-    memcpy(sector[entry_location], &entry, sizeof(entry));
+    memcpy(&sector[entry_location], &entry, sizeof(entry));
 
-    volume->device->write_sector(volume->device, volume->cwd, 1, sector);
+    return volume->device->write_sector(volume->device, volume->cwd, 1, sector);
 }
 
 int get_entry(FATVolume *volume, char name[8], char ext[3]) {
-
+    return 0;
 }
 
 int read_entry(FATVolume *volume, char name[8], char ext[3]) {
-
+    return 0;
 }
 
 int write_entry(FATVolume *volume, char name[8], char ext[3]) {
-
+    return 0;
 }
